@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://algoinspect.local/schemas/analysis-result.schema.json",
+  "title": "Algorithm analysis result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "language", "subject", "metrics", "evidence"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "language": { "type": "string", "minLength": 1 },
+    "subject": { "type": "string", "minLength": 1 },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["time", "space", "cyclomatic"],
+      "properties": {
+        "time": { "$ref": "#/$defs/complexity" },
+        "space": { "$ref": "#/$defs/complexity" },
+        "cyclomatic": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["message"],
+        "properties": {
+          "message": { "type": "string", "minLength": 1 },
+          "lineStart": { "type": "integer", "minimum": 1 },
+          "lineEnd": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "complexity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["notation"],
+      "properties": {
+        "notation": { "type": "string", "pattern": "^[OΩΘ]\\(.+\\)$" },
+        "explanation": { "type": "string" }
+      }
+    }
+  }
+}

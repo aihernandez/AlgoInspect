@@ -1,0 +1,23 @@
+{
+  "name": "algoinspect-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Herramienta web para explorar algoritmos y analizar visualmente su complejidad.",
+  "scripts": {
+    "build": "npm run build:css && npm run build:icons",
+    "build:css": "tailwindcss -i ./apps/web/src/styles/tailwind.css -o ./apps/web/public/generated/tailwind.css --minify",
+    "build:icons": "node ./scripts/generate-brand-icons.mjs",
+    "dev": "python -m http.server 4398 --bind 127.0.0.1",
+    "watch:css": "tailwindcss -i ./apps/web/src/styles/tailwind.css -o ./apps/web/public/generated/tailwind.css --watch",
+    "test": "playwright test --reporter=line",
+    "test:web": "playwright test tests/e2e/web.spec.js --reporter=line"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/cli": "4.3.3",
+    "tailwindcss": "4.3.3"
+  },
+  "dependencies": {
+    "badge-maker": "^6.0.0"
+  }
+}

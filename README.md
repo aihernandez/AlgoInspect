@@ -1,22 +1,28 @@
 # AlgoInspect
 
-AlgoInspect es una herramienta web bilingüe para explorar algoritmos, observar su ejecución y comprender por separado su complejidad temporal, espacial y ciclomática.
+AlgoInspect es una plataforma bilingüe para explorar algoritmos, observar su ejecución y comprender por separado su complejidad temporal, espacial y ciclomática.
 
-## Estado
+## Fase 1
 
-El repositorio contiene la fase 1: el laboratorio web. El análisis de código arbitrario todavía no forma parte del producto; las visualizaciones actuales utilizan contenido y trazas deterministas.
+El repositorio contiene dos soluciones diferentes dentro de un monorepo:
+
+- `AlgorithmCatalog.sln`: fuente oficial de algoritmos, README, escenarios, implementaciones y pruebas multilenguaje.
+- `AlgoInspect.Web.sln`: API ASP.NET Core y aplicación web que consumen el catálogo.
+
+Los proyectos compartidos no constituyen una tercera solución; son el contrato entre ambas.
 
 ## Inicio rápido
 
-Requisitos: Node.js, npm, Python y los navegadores de Playwright.
+Requisitos: .NET 10 SDK, Node.js, npm y los navegadores de Playwright.
 
 ```bash
 npm install
 npm run build
+npm run validate:catalog
 npm run dev
 ```
 
-Abrir `http://127.0.0.1:4398/apps/web/index.html`.
+Abrir `http://127.0.0.1:4398/`.
 
 ## Verificación
 
@@ -24,16 +30,21 @@ Abrir `http://127.0.0.1:4398/apps/web/index.html`.
 npm test
 ```
 
+Este comando ejecuta las pruebas de las dos soluciones .NET y la aceptación E2E de la web servida por ASP.NET Core.
+
 ## Estructura
 
-- `apps/web`: interfaz web canónica.
-- `packages/algorithm-catalog`: contenido, implementaciones, escenarios y trazas deterministas.
-- `packages/analysis-contracts`: contratos que separarán el motor de sus clientes.
-- `docs`: visión, roadmap, arquitectura, decisiones e historias de usuario.
-- `tests/e2e`: criterios de aceptación automatizados de la aplicación web.
+- `catalog`: fuente multilenguaje versionada.
+- `src/Catalog`: dominio, casos de uso, proveedor de archivos y validador del catálogo.
+- `src/Shared`: contratos compartidos.
+- `src/Web`: host y API de la aplicación.
+- `apps/web`: cliente web TypeScript/JavaScript y assets.
+- `contracts/schemas`: contratos serializados independientes de la UI.
+- `tests`: pruebas de catálogo, API y navegador.
+- `docs`: visión, arquitectura, decisiones e historias.
 
-La historia anterior a esta línea base se preserva fuera del repositorio activo en `AlgorithmAnalysis-archive-2026-08-08`.
+La primera vertical verificable es Kahn en C#, JavaScript, TypeScript y Python. Los diez perfiles previstos están declarados, pero no se presentan como implementados hasta disponer de código y pruebas validadas.
 
 ## Forma de trabajo
 
-Cada cambio funcional debe partir de una historia en `docs/user-stories`, usar su identificador en la rama y en los commits, y satisfacer sus escenarios Given/When/Then.
+Cada cambio funcional parte de una historia en `docs/user-stories`. El identificador debe aparecer en la rama, los commits y la pull request.

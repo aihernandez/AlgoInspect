@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\AlgorithmAnalysis.Contracts\AlgorithmAnalysis.Contracts.csproj" />
+    <ProjectReference Include="..\AlgorithmCatalog.Domain\AlgorithmCatalog.Domain.csproj" />
+    <ProjectReference Include="..\AlgorithmCatalog.Application\AlgorithmCatalog.Application.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

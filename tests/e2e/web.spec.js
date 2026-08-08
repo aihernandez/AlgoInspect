@@ -1,6 +1,6 @@
 const { test, expect } = require("@playwright/test");
 
-const url = process.env.WEB_URL || "http://127.0.0.1:4398/apps/web/index.html";
+const url = process.env.WEB_URL || "http://127.0.0.1:4398/";
 
 async function chooseAlgorithm(page, query, name) {
   await page.locator("#algorithmSearch").focus();
@@ -8,6 +8,21 @@ async function chooseAlgorithm(page, query, name) {
   await expect(page.locator("#algorithmMenu")).toBeVisible();
   await page.getByRole("option", { name }).click();
 }
+
+test("la web consume el catálogo servido por ASP.NET Core", async ({ page }) => {
+  const catalogResponse = await page.request.get("/api/catalog");
+  expect(catalogResponse.ok()).toBe(true);
+  const catalog = await catalogResponse.json();
+  expect(catalog.languages).toHaveLength(10);
+  expect(catalog.algorithms).toContainEqual(expect.objectContaining({ id: "kahn" }));
+
+  await page.goto(url, { waitUntil: "networkidle" });
+  await chooseAlgorithm(page, "kahn", /Algoritmo de Kahn/);
+  await page.locator("#testsTab").click();
+
+  await expect(page.locator("#testsTabPanel")).toContainText("API .NET");
+  await expect(page.locator("#testsTabPanel")).toContainText("10");
+});
 
 test("código y README comparten algoritmo sin alterar el visualizador", async ({ page }) => {
   const pageErrors = [];

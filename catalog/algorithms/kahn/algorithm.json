@@ -1,0 +1,36 @@
+{
+  "id": "kahn",
+  "name": "Algoritmo de Kahn",
+  "category": "Grafos",
+  "summary": "Produce un orden topológico eliminando iterativamente vértices sin dependencias pendientes y detecta ciclos cuando no puede emitir todos los vértices.",
+  "complexity": {
+    "best": "O(V + E)",
+    "average": "O(V + E)",
+    "worst": "O(V + E)",
+    "space": "O(V + E)"
+  },
+  "readme": "README.md",
+  "scenarios": "scenarios.json",
+  "implementations": [
+    {
+      "language": "csharp",
+      "source": "implementations/csharp/Kahn.cs",
+      "tests": "tests/csharp/KahnTests.cs"
+    },
+    {
+      "language": "javascript",
+      "source": "implementations/javascript/kahn.js",
+      "tests": "tests/javascript/kahn.test.js"
+    },
+    {
+      "language": "typescript",
+      "source": "implementations/typescript/kahn.ts",
+      "tests": "tests/typescript/kahn.test.ts"
+    },
+    {
+      "language": "python",
+      "source": "implementations/python/kahn.py",
+      "tests": "tests/python/test_kahn.py"
+    }
+  ]
+}

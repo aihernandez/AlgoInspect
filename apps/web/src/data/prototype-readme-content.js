@@ -129,7 +129,7 @@
       references: [{ label: "Topological sort", meta: "NIST Dictionary of Algorithms and Data Structures", url: "https://xlinux.nist.gov/dads/HTML/topologicalSort.html" }]
     },
     "kahn": {
-      markdownPath: "../../packages/algorithm-catalog/content/kahn.md",
+      markdownPath: "../../catalog/algorithms/kahn/README.md",
       problem: "Dado un grafo dirigido de dependencias, producir un orden en el que cada vértice aparezca después de todos sus predecesores. Si las dependencias forman un ciclo, no existe un orden topológico completo y debe informarse el bloqueo.",
       family: "Ordenamiento topológico de grafos dirigidos",
       paradigm: "Procesamiento incremental con estrategia greedy",

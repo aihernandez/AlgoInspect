@@ -6,10 +6,10 @@ module.exports = defineConfig({
   fullyParallel: false,
   workers: 1,
   webServer: {
-    command: "python -m http.server 4398 --bind 127.0.0.1",
-    url: "http://127.0.0.1:4398/apps/web/index.html",
+    command: "dotnet run --no-build --project ./src/Web/AlgoInspect.Api --urls http://127.0.0.1:4398",
+    url: "http://127.0.0.1:4398/api/health",
     reuseExistingServer: true,
-    timeout: 15_000,
+    timeout: 60_000,
   },
   use: {
     baseURL: "http://127.0.0.1:4398",

@@ -194,18 +194,27 @@
     }
     elements.tests.innerHTML = `<p class="readme-loading">Cargando escenarios…</p>`;
     try {
-      const document = await loadJson("../../packages/algorithm-catalog/content/kahn/scenarios.json");
+      const apiDocument = await window.AlgoInspectCatalogClient?.getAlgorithm("kahn");
+      const document = apiDocument?.scenarios
+        || await loadJson("../../catalog/algorithms/kahn/scenarios.json");
       const language = elements.languageSelect.value || "javascript";
       const rows = document.scenarios.map((scenario) => `<tr><td><code>${escapeHtml(scenario.id)}</code></td><td><pre class="tests-parameters">${escapeHtml(testCall(language, scenario))}</pre></td><td>${escapeHtml(scenario.expected.status)}</td><td>${escapeHtml(scenario.expected.order ? scenario.expected.order.join(" → ") : scenario.expected.blocked ? `Bloquea ${scenario.expected.blocked.join(" y ")}` : "Emite todos los vértices")}</td></tr>`).join("");
       const testSources = {
-        csharp: "../../packages/algorithm-catalog/content/kahn/tests/csharp/KahnTests.cs",
-        javascript: "../../packages/algorithm-catalog/content/kahn/tests/javascript/kahn.test.js"
+        csharp: "../../catalog/algorithms/kahn/tests/csharp/KahnTests.cs",
+        javascript: "../../catalog/algorithms/kahn/tests/javascript/kahn.test.js",
+        typescript: "../../catalog/algorithms/kahn/tests/typescript/kahn.test.ts",
+        python: "../../catalog/algorithms/kahn/tests/python/test_kahn.py"
       };
-      const testSource = testSources[language] ? await loadMarkdown(testSources[language]) : document.scenarios.map((scenario) => testCall(language, scenario)).join("\n\n");
+      const apiImplementation = await window.AlgoInspectCatalogClient?.getImplementation("kahn", language);
+      const testSource = apiImplementation?.tests
+        || (testSources[language]
+          ? await loadMarkdown(testSources[language])
+          : document.scenarios.map((scenario) => testCall(language, scenario)).join("\n\n"));
+      const sourceLabel = apiDocument ? "API .NET" : "catálogo local";
       elements.tests.innerHTML = `
         <h2>Pruebas de Kahn</h2>
-        <p>Los escenarios se cargan desde <code>packages/algorithm-catalog/content/kahn/scenarios.json</code>. La entrada es común; solo cambia la sintaxis de la llamada según el lenguaje seleccionado.</p>
-        <div class="tests-summary"><div><small>Escenarios</small><strong>${document.scenarios.length}</strong></div><div><small>Lenguaje</small><strong>${escapeHtml(language)}</strong></div><div><small>Fuente</small><strong>JSON</strong></div></div>
+        <p>Los escenarios pertenecen a <code>catalog/algorithms/kahn/scenarios.json</code>. La entrada es común; solo cambia la sintaxis de la llamada según el lenguaje seleccionado.</p>
+        <div class="tests-summary"><div><small>Escenarios</small><strong>${document.scenarios.length}</strong></div><div><small>Lenguaje</small><strong>${escapeHtml(language)}</strong></div><div><small>Fuente</small><strong>${sourceLabel}</strong></div></div>
         <h3>Batería unitaria (${escapeHtml(language)})</h3>
         <pre class="test-code-block">${escapeHtml(testSource)}</pre>
         <p class="tests-note">La interfaz actual muestra y valida la traza local; la ejecución real por lenguaje se incorporará mediante el runner .NET aislado.</p>
@@ -319,7 +328,8 @@
     if (markdownPath) {
       elements.readme.innerHTML = `<p class="readme-loading">Cargando README Markdown…</p>`;
       try {
-        const markdown = await loadMarkdown(markdownPath);
+        const apiDocument = await window.AlgoInspectCatalogClient?.getAlgorithm(algorithm.id);
+        const markdown = apiDocument?.readme || await loadMarkdown(markdownPath);
         if (requestId !== readmeRequestId) return;
         elements.readme.innerHTML = markdownToHtml(markdown);
         await renderMermaidDiagrams(elements.readme);

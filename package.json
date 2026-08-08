@@ -4,13 +4,18 @@
   "private": true,
   "description": "Herramienta web para explorar algoritmos y analizar visualmente su complejidad.",
   "scripts": {
-    "build": "npm run build:css && npm run build:icons",
+    "build": "npm run build:web && npm run build:dotnet",
+    "build:web": "npm run build:css && npm run build:icons",
+    "build:dotnet": "dotnet build AlgorithmCatalog.sln && dotnet build AlgoInspect.Web.sln",
     "build:css": "tailwindcss -i ./apps/web/src/styles/tailwind.css -o ./apps/web/public/generated/tailwind.css --minify",
     "build:icons": "node ./scripts/generate-brand-icons.mjs",
-    "dev": "python -m http.server 4398 --bind 127.0.0.1",
+    "dev": "dotnet run --project ./src/Web/AlgoInspect.Api --urls http://127.0.0.1:4398",
+    "dev:static": "python -m http.server 4398 --bind 127.0.0.1",
     "watch:css": "tailwindcss -i ./apps/web/src/styles/tailwind.css -o ./apps/web/public/generated/tailwind.css --watch",
-    "test": "playwright test --reporter=line",
-    "test:web": "playwright test tests/e2e/web.spec.js --reporter=line"
+    "validate:catalog": "dotnet run --project ./src/Catalog/AlgorithmCatalog.Validation -- ./catalog",
+    "test": "npm run test:dotnet && npm run test:web",
+    "test:dotnet": "dotnet test AlgorithmCatalog.sln && dotnet test AlgoInspect.Web.sln",
+    "test:web": "dotnet build ./src/Web/AlgoInspect.Api/AlgoInspect.Api.csproj && npm run build:web && playwright test tests/e2e/web.spec.js --reporter=line"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

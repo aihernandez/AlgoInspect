@@ -1,0 +1,9 @@
+/* Contrato compartido: los componentes sólo consumen estos roles semánticos. */
+:root {
+  --lab-height: clamp(660px, calc(100dvh - 90px), 820px);
+  --search: var(--focus);
+  --sorting: var(--purple);
+  --graphs: var(--green);
+  --recursion: var(--amber);
+  --dynamic: var(--red);
+}

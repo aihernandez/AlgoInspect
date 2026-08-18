@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const sourcePath = path.join(projectRoot, "apps", "web", "public", "assets", "brand", "algo-inspect-app-icon.svg");
-const outputDir = path.join(projectRoot, "apps", "web", "public", "assets", "icons");
+const sourcePath = path.join(projectRoot, "src", "frontend", "public", "assets", "brand", "algo-inspect-app-icon.svg");
+const outputDir = path.join(projectRoot, "src", "frontend", "public", "assets", "icons");
 const svg = await readFile(sourcePath, "utf8");
 const encodedSvg = `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 const outputs = [

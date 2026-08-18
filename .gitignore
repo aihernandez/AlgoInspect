@@ -1,13 +1,92 @@
-node_modules/
+# ---------------------------------------------------------------------------
+# AlgoInspect
+#
+# Regla general: el repositorio guarda fuentes, contenido del catálogo y
+# documentación. Todo lo que se pueda regenerar con `npm run build`,
+# `dotnet build` o `npm test` queda fuera.
+# ---------------------------------------------------------------------------
+
+# --- .NET ------------------------------------------------------------------
 **/bin/
 **/obj/
-.vs/
 *.user
+*.suo
+*.userprefs
+*.dotCover
+*.coverage
+*.coverlet.json
+[Tt]est[Rr]esult*/
+BenchmarkDotNet.Artifacts/
+msbuild.log
+msbuild.binlog
+*.binlog
+
+# NuGet: se restaura desde el lockfile, no se versiona el contenido
+*.nupkg
+*.snupkg
+.nuget/
+# Carpeta de restauración NuGet clásica.
+packages/
+
+# --- Node ------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.npm/
+.pnpm-store/
+
+# --- Python (implementaciones y pruebas del catálogo) ----------------------
 __pycache__/
+*.py[cod]
 .pytest_cache/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+
+# --- Salidas de build y publicación ----------------------------------------
 artifacts/
 dist/
+publish/
+src/frontend/public/generated/
+src/frontend/public/vendor/
+
+# --- Pruebas ---------------------------------------------------------------
 test-results/
 playwright-report/
-apps/web/public/generated/
+blob-report/
+.playwright/
+coverage/
+*.lcov
+
+# --- Editores y herramientas -----------------------------------------------
+.vs/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+.idea/
+*.swp
 .impeccable/
+.claude/settings.local.json
+
+# --- Sistema operativo ------------------------------------------------------
+[Tt]humbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# --- Secretos y configuración local ----------------------------------------
+# Nunca deben llegar a un repositorio público.
+.env
+.env.*
+!.env.example
+# Sentry CLI guarda aqui el token de autenticacion.
+.sentryclirc
+*.pfx
+*.p12
+*.key
+*.pem
+appsettings.*.local.json
+secrets.json

@@ -1,0 +1,66 @@
+name: Feature request
+description: Suggest a capability, an improvement, or a change in behavior.
+title: "[Feature]: "
+labels: ["enhancement", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, please check [the roadmap](https://github.com/aihernandez/AlgoInspect/blob/main/docs/product/ROADMAP.md).
+        Some capabilities are already planned for later phases, including a
+        CLI, editor extensions and additional analyzers.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the situation you run into, not the solution you have in mind. What are you trying to understand or do that is hard today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What you would like to see happen.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of request is this?
+      options:
+        - New algorithm in the catalog
+        - New language for an existing algorithm
+        - New scenario or trace improvement
+        - Analysis or metrics change
+        - Visual lab / user experience
+        - API or contract change
+        - Tooling, build or CI
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Other approaches you weighed, and why they fall short.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Screenshots, references, papers, or links to prior art.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and discussions and this has not been proposed.
+          required: true
+        - label: I agree to follow this project's [Code of Conduct](https://github.com/aihernandez/AlgoInspect/blob/main/CODE_OF_CONDUCT.md).
+          required: true

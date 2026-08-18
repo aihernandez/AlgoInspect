@@ -1,6 +1,7 @@
-# Solución AlgoInspect Web
+# AlgoInspect Web
 
-`AlgoInspect.Web.sln` contiene la aplicación consumidora del catálogo.
+- Estado: tres verticales canónicas implementadas.
+- Superficie: cliente HTML/CSS/JavaScript y API ASP.NET Core del mismo origen.
 
 ## Backend
 
@@ -8,19 +9,31 @@ ASP.NET Core aloja el cliente web y expone:
 
 ```text
 GET /api/health
+GET /api/health/ready
+GET /api/health/live
 GET /api/catalog
 GET /api/algorithms/{id}
 GET /api/algorithms/{id}/implementations/{language}
+GET /api/algorithms/{id}/scenarios
 ```
 
-La API utiliza los casos de uso de `AlgorithmCatalog.Application`; no conoce la estructura interna de los manifiestos.
+La API utiliza los casos de uso de `AlgorithmCatalog.Application`; no filtra al cliente la estructura interna del sistema de archivos. Readiness lee y valida todas las verticales declaradas, mientras que liveness sólo confirma que el proceso puede responder.
 
 ## Cliente
 
-`apps/web` mantiene Monaco, D3, Cytoscape, Mermaid y la interacción del laboratorio. `catalog-client.js` consulta la API del mismo origen. El fallback estático existe únicamente para revisar la maqueta sin ASP.NET Core.
+El cliente consume exclusivamente la API del mismo origen. Monaco, D3, Cytoscape y Mermaid están fijados en `package-lock.json` y se copian a `public/vendor` durante `npm run build:web`; no se ejecuta JavaScript desde CDN.
 
-Los archivos `prototype-*.js` son datos de compatibilidad de la maqueta y no son la fuente canónica. Deben reducirse a medida que los algoritmos migren a `catalog/algorithms`.
+Los archivos históricos `prototype-*` se conservan como referencia de diseño, pero el servidor los bloquea y el proyecto los excluye del artefacto publicado. No son fallback ni fuente alternativa.
 
-## Próxima vertical
+## Frontera de internet
 
-La web debe reemplazar progresivamente cada lectura de datos embebidos por respuestas del API, comenzando con Kahn. La presentación y la reproducción permanecen en el navegador; la carga y validación del contenido pertenecen a .NET.
+La aplicación agrega CSP, cabeceras defensivas, rate limit, compresión, caché de estáticos y logs HTTP sin cuerpos. El procesamiento de forwarded headers permanece deshabilitado hasta recibir IP explícitas de un proxy confiable.
+
+La configuración operativa, las rutas de health check y las responsabilidades de TLS están en `docs/operations/INTERNET_DEPLOYMENT.md`.
+
+## Límites actuales
+
+- La superficie pública ofrece Kahn, Búsqueda binaria y Bubble Sort.
+- No se ejecuta el código mostrado.
+- No existe análisis libre real ni inferencia automática de Big O.
+- No se persisten cuentas, código o actividad del visitante.

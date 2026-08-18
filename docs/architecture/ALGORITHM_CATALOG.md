@@ -1,12 +1,13 @@
-# Solución Algorithm Catalog
+# Solución propuesta: Algorithm Catalog
 
-`AlgorithmCatalog.sln` mantiene la fuente oficial de conocimiento algorítmico.
+- Estado: diseño documental; no implementada mediante estas historias
 
-## Proyectos
+`AlgorithmCatalog.sln` será la vista de construcción de la fuente oficial de conocimiento algorítmico cuando se autorice su implementación.
+
+## Proyectos previstos
 
 - `AlgorithmAnalysis.Contracts`: contratos serializados compartidos.
 - `AlgorithmCatalog.Domain`: conceptos e invariantes, como identificadores seguros.
-- `AlgorithmCatalog.Content`: incorpora README, escenarios, código y pruebas a la construcción del catálogo.
 - `AlgorithmCatalog.Application`: puerto del catálogo y verticales de consulta.
 - `AlgorithmCatalog.Infrastructure.FileSystem`: lectura segura desde el repositorio.
 - `AlgorithmCatalog.Validation`: validación ejecutable de manifiestos y archivos.
@@ -26,4 +27,4 @@ Cada algoritmo contiene:
 
 Perfiles previstos: C#, Java, JavaScript, Node.js, TypeScript, Python, Rust, Ruby, C y C++.
 
-Primera vertical: C#, JavaScript, TypeScript y Python. La expansión comienza únicamente después de validar el contrato con Kahn y al menos otros dos tipos de algoritmo.
+Primera cobertura propuesta: C#, JavaScript, TypeScript y Python. La expansión comenzará únicamente después de validar documentalmente el contrato con Kahn, búsqueda binaria y Bubble Sort.

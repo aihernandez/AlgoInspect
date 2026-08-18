@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "1.0",
+  "contentVersion": "1.0.0",
+  "id": "binary-search",
+  "name": "Búsqueda binaria",
+  "englishName": "Binary Search",
+  "category": "search",
+  "paradigm": "Divide y vencerás sobre un intervalo ordenado",
+  "difficulty": "Básico",
+  "summary": "Busca un valor en un arreglo ordenado descartando la mitad del intervalo pendiente en cada comparación.",
+  "invariant": "Si el objetivo existe, permanece dentro del intervalo cerrado [low, high] antes de cada iteración.",
+  "inputs": [
+    "Un arreglo finito de enteros ordenado de forma ascendente.",
+    "Un entero objetivo que se desea localizar."
+  ],
+  "outputs": [
+    "El índice base cero de una coincidencia cuando el objetivo existe.",
+    "-1 cuando el objetivo no pertenece al arreglo."
+  ],
+  "preconditions": [
+    "El arreglo está ordenado de forma ascendente.",
+    "Los índices del arreglo caben en el tipo entero de la implementación."
+  ],
+  "assumptions": [
+    "Con duplicados se devuelve la primera coincidencia encontrada por la secuencia de puntos medios; no se garantiza el primer ni el último duplicado.",
+    "El punto medio se calcula como low + (high - low) / 2 para evitar overflow por suma.",
+    "La variante publicada es iterativa y no valida el ordenamiento para conservar tiempo O(log n)."
+  ],
+  "complexity": {
+    "best": "O(1)",
+    "average": "O(log n)",
+    "worst": "O(log n)",
+    "space": "O(1)"
+  },
+  "readme": "README.md",
+  "scenarios": "scenarios.json",
+  "implementations": [
+    {
+      "language": "csharp",
+      "minimumVersion": ".NET 10 / C# 14",
+      "entryPoint": "AlgorithmAnalysis.BinarySearch.BinarySearchAlgorithm.Find",
+      "source": "implementations/csharp/BinarySearch.cs",
+      "tests": "tests/csharp/BinarySearchTests.cs",
+      "validationProfile": "binary-search-csharp"
+    },
+    {
+      "language": "javascript",
+      "minimumVersion": "Node.js 24",
+      "entryPoint": "binarySearch",
+      "source": "implementations/javascript/binary-search.js",
+      "tests": "tests/javascript/binary-search.test.js",
+      "validationProfile": "binary-search-javascript"
+    },
+    {
+      "language": "typescript",
+      "minimumVersion": "TypeScript 5.9 / Node.js 24",
+      "entryPoint": "binarySearch",
+      "source": "implementations/typescript/binary-search.ts",
+      "tests": "tests/typescript/binary-search.test.ts",
+      "validationProfile": "binary-search-typescript"
+    },
+    {
+      "language": "python",
+      "minimumVersion": "Python 3.13",
+      "entryPoint": "binary_search",
+      "source": "implementations/python/binary_search.py",
+      "tests": "tests/python/test_binary_search.py",
+      "validationProfile": "binary-search-python"
+    }
+  ],
+  "references": [
+    {
+      "title": "binary search",
+      "author": "Paul E. Black",
+      "organization": "NIST Dictionary of Algorithms and Data Structures",
+      "year": 2022,
+      "url": "https://www.nist.gov/dads/HTML/binarySearch.html"
+    },
+    {
+      "title": "Introduction to Algorithms, 4th edition",
+      "author": "Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein",
+      "organization": "MIT Press",
+      "year": 2022,
+      "url": "https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/"
+    }
+  ]
+}

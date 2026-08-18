@@ -11,6 +11,10 @@ public interface IAlgorithmCatalog
         AlgorithmSlug algorithm,
         CancellationToken cancellationToken);
 
+    ValueTask<ScenarioDocumentContract?> GetScenariosAsync(
+        AlgorithmSlug algorithm,
+        CancellationToken cancellationToken);
+
     ValueTask<ImplementationSourceContract?> GetImplementationAsync(
         AlgorithmSlug algorithm,
         string language,

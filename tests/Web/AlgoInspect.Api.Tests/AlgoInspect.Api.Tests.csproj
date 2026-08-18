@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\Web\AlgoInspect.Api\AlgoInspect.Api.csproj" />
+    <ProjectReference Include="..\..\..\src\backend\AlgoInspect.Api\AlgoInspect.Api.csproj" />
   </ItemGroup>
 
 </Project>

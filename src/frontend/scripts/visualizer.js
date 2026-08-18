@@ -25,6 +25,7 @@
     languageCoverage: document.querySelector("#languageCoverage"),
     monacoHost: document.querySelector("#monacoEditor"),
     fallbackEditor: document.querySelector("#fallbackEditor"),
+    editorFrame: document.querySelector(".editor-frame"),
     editorLoading: document.querySelector("#editorLoading"),
     codeLineStatus: document.querySelector("#codeLineStatus"),
     codeStats: document.querySelector("#codeStats"),
@@ -98,14 +99,22 @@
 
   const categoryById = Object.fromEntries(catalog.categories.map((item) => [item.id, item]));
   const algorithmById = Object.fromEntries(catalog.algorithms.map((item) => [item.id, item]));
+  const initialParameters = new URLSearchParams(window.location.search);
+  const requestedAlgorithm = initialParameters.get("algorithm");
+  const requestedLanguage = initialParameters.get("language");
+  const requestedScenario = initialParameters.get("scenario");
+  const initialAlgorithm = algorithmById[requestedAlgorithm] || catalog.algorithms[0];
+  const initialLanguage = catalog.languages.some((language) => language.id === requestedLanguage)
+    ? requestedLanguage
+    : catalog.languages[0].id;
   const state = {
     mode: "known",
-    algorithmId: "binary-search",
-    languageId: "csharp",
+    algorithmId: initialAlgorithm.id,
+    languageId: initialLanguage,
     query: "",
     menuOpen: false,
     menuIndex: -1,
-    presetId: "middle",
+    presetId: requestedScenario || initialAlgorithm.presets[0].id,
     trace: [],
     step: 0,
     furthestStep: 0,
@@ -113,6 +122,8 @@
     timer: null,
     codeReference: null,
     editor: null,
+    codeZoomSize: 9.5,
+    codeZoomMode: "fit",
     editorDecorations: [],
     cytoscape: null,
     freeScenario: "all",
@@ -205,15 +216,12 @@
     </section>`).join("");
     elements.catalogEmpty.hidden = algorithms.length > 0;
     elements.catalog.hidden = algorithms.length === 0;
-    const freeTitle = elements.freeCodeOption.querySelector("strong");
-    freeTitle.textContent = state.query.trim() ? `Usar “${state.query.trim()}” como código libre` : "Analizar código libre";
-    elements.freeCodeOption.setAttribute("aria-selected", String(state.mode === "free"));
     state.menuIndex = -1;
     updateMenuActiveOption();
   }
 
   function menuOptions() {
-    return [...elements.catalog.querySelectorAll("[data-algorithm]"), elements.freeCodeOption];
+    return [...elements.catalog.querySelectorAll("[data-algorithm]")];
   }
 
   function updateMenuActiveOption() {
@@ -277,7 +285,7 @@
     else {
       const matches = filteredAlgorithms();
       if (matches.length === 1) selectAlgorithm(matches[0].id);
-      else switchToFreeMode(state.query.trim());
+      else announce("No hay algoritmos publicados que coincidan. Modifica la búsqueda.");
     }
   }
 
@@ -306,6 +314,26 @@
     if (state.mode === "free") elements.freeScopeName.textContent = lines ? `Contenido completo · ${lines} línea${lines === 1 ? "" : "s"}` : "Editor vacío";
   }
 
+  function codeLineCount() {
+    return state.codeReference?.code ? state.codeReference.code.split("\n").length : 0;
+  }
+
+  function applyCodeZoom(size, mode = "manual") {
+    state.codeZoomSize = Math.max(8, Math.min(16, Math.round(size * 2) / 2));
+    state.codeZoomMode = mode;
+    const lineHeight = Math.max(11, Math.round(state.codeZoomSize * 1.45));
+    elements.fallbackEditor.style.fontSize = `${state.codeZoomSize}px`;
+    elements.fallbackEditor.style.lineHeight = `${lineHeight}px`;
+    if (state.editor && window.monaco) state.editor.updateOptions({ fontSize: state.codeZoomSize, lineHeight });
+  }
+
+  function fitCodeToViewport() {
+    const lines = Math.max(1, codeLineCount());
+    const height = elements.editorFrame?.clientHeight || 420;
+    const fittedSize = Math.max(8, Math.min(11, (height - 20) / (lines * 1.45)));
+    applyCodeZoom(fittedSize, "fit");
+  }
+
   function updateCodeReference({ resetFree = false } = {}) {
     if (state.mode === "free") {
       const language = languageDefinition();
@@ -326,6 +354,7 @@
       state.editor.setValue(state.codeReference.code);
       state.editor.updateOptions({ readOnly: state.mode !== "free" });
     }
+    if (state.codeZoomMode === "fit") window.requestAnimationFrame(fitCodeToViewport);
     highlightCodeLine();
   }
 
@@ -454,8 +483,8 @@
     elements.description.textContent = algorithm.description;
     elements.time.textContent = algorithm.time;
     elements.space.textContent = algorithm.space;
-    elements.timeCell.setAttribute("aria-label", `Tiempo ${algorithm.time}. Mostrar escenarios y posición en la gráfica Big O.`);
-    elements.spaceCell.setAttribute("aria-label", `Espacio ${algorithm.space}. Mostrar escenarios y posición en la gráfica Big O.`);
+    elements.timeCell.title = `Ver gráfica de escenarios de tiempo ${algorithm.time}.`;
+    elements.spaceCell.title = `Ver gráfica de escenarios de espacio ${algorithm.space}.`;
     elements.visualCategoryIcon.style.setProperty("--category-color", category.color);
     elements.visualCategoryIcon.innerHTML = categoryIcons[algorithm.category];
     elements.family.textContent = categoryLabel(category);
@@ -474,8 +503,8 @@
     setHiddenInert(elements.freeAnalysisView, !isFree);
     elements.visualizationPanel.setAttribute("aria-labelledby", isFree ? "freeAnalysisTitle" : "visualTitle");
     elements.pickerModeLabel.textContent = isFree ? "Código libre" : "Reconocido";
-    elements.languageCoverage.textContent = isFree ? "Editor habilitado" : `${catalog.algorithms.length}/${catalog.algorithms.length} guías`;
-    elements.sourceModeLabel.textContent = isFree ? "Código editable · análisis simulado" : "Pseudocódigo con sintaxis · no ejecutable";
+    elements.languageCoverage.textContent = isFree ? "Editor habilitado" : `${catalog.languages.length} implementaciones canónicas`;
+    elements.sourceModeLabel.textContent = isFree ? "Código editable · análisis simulado" : "Implementación canónica validada";
     if (isFree) {
       hideComplexityPopover();
       elements.selectedCategory.style.setProperty("--category-color", "#bc8cff");
@@ -617,12 +646,22 @@
     rebuildTrace(true);
     closeAlgorithmMenu({ restoreValue: false });
     elements.search.value = algorithm.name;
+    updateCanonicalUrl();
     if (elements.stageCanvas.animate && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       elements.stageCanvas.animate([
         { opacity: 0.64, filter: "blur(2px)", clipPath: "inset(0 5% 0 5%)" },
         { opacity: 1, filter: "blur(0)", clipPath: "inset(0 0 0 0)" }
       ], { duration: 360, easing: "cubic-bezier(.16, 1, .3, 1)" });
     }
+  }
+
+  function updateCanonicalUrl() {
+    if (state.mode !== "known") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("algorithm", state.algorithmId);
+    url.searchParams.set("language", state.languageId);
+    url.searchParams.set("scenario", state.presetId);
+    window.history.replaceState(null, "", url);
   }
 
   function switchToFreeMode(label = "") {
@@ -670,7 +709,6 @@
       button.type = "button";
       button.className = "execution-step-button";
       button.dataset.executionStep = String(index);
-      button.setAttribute("aria-label", `Paso ${index + 1}: ${step.title}. ${stepValuesSummary(step, 8)}. Resaltar línea ${traceLineNumber(step)} y actualizar el diagrama.`);
 
       const marker = document.createElement("span");
       marker.className = "execution-step-marker";
@@ -991,7 +1029,7 @@
       renderGraphFallback(view);
       return;
     }
-    elements.stageCanvas.innerHTML = `<div id="cytoscapeStage" aria-label="${view.algorithm === "kahn" ? "Grafo dirigido de Kahn; cada nodo muestra su grado de entrada" : "Grafo del paso actual"}"></div>`;
+    elements.stageCanvas.innerHTML = `<div id="cytoscapeStage" role="img" aria-label="${view.algorithm === "kahn" ? "Grafo dirigido de Kahn; cada nodo muestra su grado de entrada" : "Grafo del paso actual"}"></div>`;
     const data = graphElements(view.layout, view);
     state.cytoscape = window.cytoscape({
       container: document.querySelector("#cytoscapeStage"),
@@ -1177,13 +1215,15 @@
       showFallback();
       return;
     }
-    window.require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.55.1/min/vs" } });
+    window.require.config({ paths: { vs: "./public/vendor/monaco/vs" } });
     window.require(["vs/editor/editor.main"], () => {
       if (completed) return;
       completed = true;
       window.clearTimeout(timeout);
-      window.monaco.editor.defineTheme("algorithmLab", {
-        base: "vs-dark",
+      const defineEditorTheme = () => {
+        const light = document.documentElement.dataset.theme === "light";
+        window.monaco.editor.defineTheme("algorithmLab", {
+        base: light ? "vs" : "vs-dark",
         inherit: true,
         rules: [
           { token: "comment", foreground: "7f8b98" }, { token: "keyword", foreground: "ff7b72" },
@@ -1191,11 +1231,13 @@
           { token: "type", foreground: "d2a8ff" }
         ],
         colors: {
-          "editor.background": "#0f141a", "editor.foreground": "#d7dde5", "editorLineNumber.foreground": "#59636f",
-          "editorLineNumber.activeForeground": "#b1bac4", "editor.selectionBackground": "#264f78", "editor.lineHighlightBackground": "#141b23",
-          "editorGutter.background": "#0f141a", "scrollbarSlider.background": "#30363d99", "scrollbarSlider.hoverBackground": "#484f58bb"
+          "editor.background": light ? "#ffffff" : "#0f141a", "editor.foreground": light ? "#172033" : "#d7dde5", "editorLineNumber.foreground": light ? "#65738a" : "#8c96a1",
+          "editorLineNumber.activeForeground": light ? "#43516a" : "#b1bac4", "editor.selectionBackground": light ? "#cfe5ff" : "#264f78", "editor.lineHighlightBackground": light ? "#f0f6ff" : "#141b23",
+          "editorGutter.background": light ? "#ffffff" : "#0f141a", "scrollbarSlider.background": light ? "#aebdce99" : "#30363d99", "scrollbarSlider.hoverBackground": light ? "#8799adbb" : "#484f58bb"
         }
       });
+      };
+      defineEditorTheme();
       state.editor = window.monaco.editor.create(elements.monacoHost, {
         value: state.codeReference.code,
         language: state.codeReference.monacoLanguage,
@@ -1204,15 +1246,16 @@
         automaticLayout: true,
         minimap: { enabled: false },
         fontFamily: "Cascadia Code, SFMono-Regular, Consolas, monospace",
-        fontSize: 11.5,
-        lineHeight: 19,
+        fontSize: state.codeZoomSize,
+        lineHeight: Math.max(11, Math.round(state.codeZoomSize * 1.45)),
         lineNumbersMinChars: 3,
         padding: { top: 10, bottom: 10 },
         scrollBeyondLastLine: false,
         renderLineHighlight: "all",
         overviewRulerBorder: false,
         scrollbar: { verticalScrollbarSize: 9, horizontalScrollbarSize: 9 },
-        wordWrap: "on"
+        wordWrap: "on",
+        mouseWheelZoom: true
       });
       state.editor.onDidChangeModelContent(() => {
         const code = state.editor.getValue();
@@ -1223,7 +1266,12 @@
         }
       });
       elements.editorLoading.hidden = true;
+      if (state.codeZoomMode === "fit") fitCodeToViewport();
       highlightCodeLine();
+      document.addEventListener("algoinspect:themechange", () => {
+        defineEditorTheme();
+        window.monaco.editor.setTheme("algorithmLab");
+      });
     }, showFallback);
   }
 
@@ -1469,12 +1517,27 @@
     updateCodeReference({ resetFree: state.mode === "free" && state.freeCodeByLanguage[state.languageId] === undefined });
     if (state.mode === "known") renderExecutionSteps();
     const languageLabel = languageDefinition().label;
-    announce(state.mode === "free" ? `Editor libre configurado para ${languageLabel}.` : `${selectedAlgorithm().name} mostrado como referencia ${languageLabel}.`);
+    updateCanonicalUrl();
+    announce(state.mode === "free" ? `Editor libre configurado para ${languageLabel}.` : `${selectedAlgorithm().name} mostrado con la implementación canónica ${languageLabel}.`);
   });
 
   elements.preset.addEventListener("change", () => {
     state.presetId = elements.preset.value;
+    updateCanonicalUrl();
     rebuildTrace(true);
+    window.dispatchEvent(new CustomEvent("algoinspect:scenario-changed", { detail: { scenarioId: state.presetId } }));
+  });
+
+  window.addEventListener("algoinspect:scenario-select", (event) => {
+    const scenarioId = event.detail?.scenarioId;
+    if (!scenarioId || state.mode !== "known" || !selectedAlgorithm().presets.some((preset) => preset.id === scenarioId)) return;
+    state.presetId = scenarioId;
+    elements.preset.value = scenarioId;
+    updateCanonicalUrl();
+    rebuildTrace(true);
+    window.dispatchEvent(new CustomEvent("algoinspect:scenario-changed", { detail: { scenarioId } }));
+    elements.preset.focus({ preventScroll: true });
+    announce(`Escenario ${elements.preset.selectedOptions[0]?.textContent || scenarioId} seleccionado.`);
   });
 
   elements.restart.addEventListener("click", restartTrace);
@@ -1609,6 +1672,18 @@
     }
   });
 
+  elements.editorFrame.addEventListener("wheel", (event) => {
+    if (!(event.ctrlKey || event.metaKey) || (state.editor && !elements.fallbackEditor.contains(event.target))) return;
+    event.preventDefault();
+    applyCodeZoom(state.codeZoomSize + (event.deltaY < 0 ? 0.5 : -0.5));
+  }, { passive: false });
+
+  document.addEventListener("keydown", (event) => {
+    if (!(event.ctrlKey || event.metaKey) || event.key !== "0" || !elements.editorFrame.contains(document.activeElement)) return;
+    event.preventDefault();
+    fitCodeToViewport();
+  });
+
   elements.zoomOut.addEventListener("click", () => setDiagramScale(Math.round((state.diagramScale - 0.25) * 4) / 4, { x: 0, y: 0 }, true));
   elements.zoomIn.addEventListener("click", () => setDiagramScale(Math.round((state.diagramScale + 0.25) * 4) / 4, { x: 0, y: 0 }, true));
   elements.zoomFit.addEventListener("click", () => resetDiagramView(true));
@@ -1716,6 +1791,7 @@
   window.addEventListener("resize", () => {
     if (state.cytoscape) state.cytoscape.resize().fit(undefined, 34);
     applyDiagramView();
+    if (state.codeZoomMode === "fit") fitCodeToViewport();
     if (state.mode === "free") renderFreeComplexityCharts();
   });
 
@@ -1726,6 +1802,7 @@
   updateCodeReference();
   updateModePresentation();
   elements.search.value = selectedAlgorithm().name;
+  updateCanonicalUrl();
   rebuildTrace();
   initMonaco();
   initResize();

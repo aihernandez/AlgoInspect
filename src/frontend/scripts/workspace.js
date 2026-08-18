@@ -32,6 +32,9 @@
 
   if (Object.values(elements).some((element) => !element)) return;
 
+  // Las tres pestañas son permanentes: retirar la acción de cierre del menú.
+  elements.tabMenu.querySelector('[data-tab-command="close"]')?.remove();
+
   const algorithmByName = new Map(catalog.algorithms.map((algorithm) => [algorithm.name, algorithm]));
   const theoryById = new Map((window.TheoryContent?.algorithms || []).map((algorithm) => [algorithm.id, algorithm]));
   const categoryById = new Map(catalog.categories.map((category) => [category.id, category]));
@@ -49,6 +52,7 @@
   let tabMenuTarget = null;
   let splitPointer = null;
   let readmeRequestId = 0;
+  let testsRequestId = 0;
   const markdownCache = new Map();
 
   function escapeHtml(value) {
@@ -176,7 +180,19 @@
     return jsonCache.get(path);
   }
 
-  function testCall(language, scenario) {
+  function testCall(algorithmId, language, scenario) {
+    if (algorithmId === "binary-search") {
+      const values = JSON.stringify(scenario.values);
+      if (language === "csharp") return `BinarySearchAlgorithm.Find(${values}, ${scenario.target});`;
+      if (language === "python") return `binary_search(${values}, ${scenario.target})`;
+      return `binarySearch(${values}, ${scenario.target});`;
+    }
+    if (algorithmId === "bubble-sort") {
+      const values = JSON.stringify(scenario.values);
+      if (language === "csharp") return `BubbleSortAlgorithm.Execute(${values});`;
+      if (language === "python") return `bubble_sort(${values})`;
+      return `bubbleSort(${values});`;
+    }
     const vertices = JSON.stringify(scenario.vertices);
     const edges = JSON.stringify(scenario.edges);
     if (language === "csharp") return `Kahn(new Graph(\n    vertices: ${vertices},\n    edges: ${edges}\n));`;
@@ -186,44 +202,72 @@
     return `kahn({\n  vertices: ${vertices},\n  edges: ${edges}\n});`;
   }
 
+  function expectedSummary(algorithmId, scenario) {
+    if (algorithmId === "binary-search") {
+      return scenario.expected.index >= 0 ? `Índice ${scenario.expected.index}` : "Devuelve -1";
+    }
+    if (algorithmId === "bubble-sort") {
+      const metrics = [
+        scenario.expected.comparisons === undefined ? null : `${scenario.expected.comparisons} comparaciones`,
+        scenario.expected.swaps === undefined ? null : `${scenario.expected.swaps} intercambios`,
+        scenario.expected.terminatedEarly === true ? "salida temprana" : null
+      ].filter(Boolean).join(" · ");
+      return `${scenario.expected.values.join(" → ")}${metrics ? ` · ${metrics}` : ""}`;
+    }
+    return scenario.expected.status === "invalid"
+      ? `Diagnóstico ${scenario.expected.diagnostic}`
+      : scenario.expected.order
+        ? scenario.expected.order.join(" → ")
+        : scenario.expected.blocked?.length
+          ? `Bloquea ${scenario.expected.blocked.join(" y ")}`
+          : "Emite todos los vértices";
+  }
+
   async function renderTests() {
+    const requestId = ++testsRequestId;
     const algorithm = currentAlgorithm();
-    if (!algorithm || algorithm.id !== "kahn") {
+    if (!algorithm) {
       elements.tests.innerHTML = `<div class="readme-empty"><div><h2>Pruebas no disponibles</h2><p>Este tab se habilitará cuando el algoritmo tenga escenarios estructurados.</p></div></div>`;
       return;
     }
     elements.tests.innerHTML = `<p class="readme-loading">Cargando escenarios…</p>`;
     try {
-      const apiDocument = await window.AlgoInspectCatalogClient?.getAlgorithm("kahn");
-      const document = apiDocument?.scenarios
-        || await loadJson("../../catalog/algorithms/kahn/scenarios.json");
+      const canonical = await window.AlgoInspectCatalogClient.getScenarios(algorithm.id);
+      const document = canonical.scenarios;
       const language = elements.languageSelect.value || "javascript";
-      const rows = document.scenarios.map((scenario) => `<tr><td><code>${escapeHtml(scenario.id)}</code></td><td><pre class="tests-parameters">${escapeHtml(testCall(language, scenario))}</pre></td><td>${escapeHtml(scenario.expected.status)}</td><td>${escapeHtml(scenario.expected.order ? scenario.expected.order.join(" → ") : scenario.expected.blocked ? `Bloquea ${scenario.expected.blocked.join(" y ")}` : "Emite todos los vértices")}</td></tr>`).join("");
-      const testSources = {
-        csharp: "../../catalog/algorithms/kahn/tests/csharp/KahnTests.cs",
-        javascript: "../../catalog/algorithms/kahn/tests/javascript/kahn.test.js",
-        typescript: "../../catalog/algorithms/kahn/tests/typescript/kahn.test.ts",
-        python: "../../catalog/algorithms/kahn/tests/python/test_kahn.py"
-      };
-      const apiImplementation = await window.AlgoInspectCatalogClient?.getImplementation("kahn", language);
-      const testSource = apiImplementation?.tests
-        || (testSources[language]
-          ? await loadMarkdown(testSources[language])
-          : document.scenarios.map((scenario) => testCall(language, scenario)).join("\n\n"));
-      const sourceLabel = apiDocument ? "API .NET" : "catálogo local";
+      const selectedScenarioId = globalThis.document.querySelector("#presetSelect")?.value;
+      const scenarioRows = document.map((scenario) => `<tr class="tests-scenario-row${scenario.id === selectedScenarioId ? " is-selected" : ""}" data-scenario-id="${escapeHtml(scenario.id)}" tabindex="0" role="button" aria-selected="${scenario.id === selectedScenarioId}" title="Seleccionar este escenario"><td><code>${escapeHtml(scenario.id)}</code></td><td><pre class="tests-parameters">${escapeHtml(testCall(algorithm.id, language, scenario))}</pre></td><td>${escapeHtml(scenario.expected.status)}</td><td>${escapeHtml(expectedSummary(algorithm.id, scenario))}</td></tr>`).join("");
+      const apiImplementation = await window.AlgoInspectCatalogClient.getImplementation(algorithm.id, language);
+      if (requestId !== testsRequestId || language !== elements.languageSelect.value) return;
+      const testSource = apiImplementation.tests;
+      const sourceLabel = `API · v${canonical.contentVersion}`;
       elements.tests.innerHTML = `
-        <h2>Pruebas de Kahn</h2>
-        <p>Los escenarios pertenecen a <code>catalog/algorithms/kahn/scenarios.json</code>. La entrada es común; solo cambia la sintaxis de la llamada según el lenguaje seleccionado.</p>
-        <div class="tests-summary"><div><small>Escenarios</small><strong>${document.scenarios.length}</strong></div><div><small>Lenguaje</small><strong>${escapeHtml(language)}</strong></div><div><small>Fuente</small><strong>${sourceLabel}</strong></div></div>
+        <h2>Pruebas de ${escapeHtml(algorithm.name)}</h2>
+        <p>La batería unitaria declara sus casos, entradas y expectativas directamente en el archivo de prueba del lenguaje seleccionado.</p>
+        <p class="tests-purpose"><strong>¿Qué es este tab?</strong> Muestra una batería revisable y sus resultados esperados. La tabla presenta las entradas publicadas por el catálogo para reproducirlas en la visualización; no ejecuta código en el navegador.</p>
+        <div class="tests-summary"><div><small>Escenarios</small><strong>${document.length}</strong></div><div><small>Lenguaje</small><strong>${escapeHtml(language)}</strong></div><div><small>Fuente</small><strong>${sourceLabel}</strong></div></div>
         <h3>Batería unitaria (${escapeHtml(language)})</h3>
         <pre class="test-code-block">${escapeHtml(testSource)}</pre>
-        <p class="tests-note">La interfaz actual muestra y valida la traza local; la ejecución real por lenguaje se incorporará mediante el runner .NET aislado.</p>
+        <p class="tests-note">El perfil <code>${escapeHtml(apiImplementation.validationProfile)}</code> ejecuta la batería mostrada mediante <code>npm run validate:algorithms</code>.</p>
         <h3>Suite de escenarios</h3>
-        <table class="tests-table"><thead><tr><th>Escenario</th><th>Parámetros enviados</th><th>Estado esperado</th><th>Validación</th></tr></thead><tbody>${rows}</tbody></table>`;
+        <table class="tests-table"><thead><tr><th>Escenario</th><th>Parámetros enviados</th><th>Estado esperado</th><th>Validación</th></tr></thead><tbody>${scenarioRows}</tbody></table>`;
     } catch (error) {
-      elements.tests.innerHTML = `<p class="readme-error">No se pudieron cargar las pruebas: ${escapeHtml(error.message)}</p>`;
+      if (requestId !== testsRequestId) return;
+      elements.tests.innerHTML = `<div class="readme-error" role="alert"><p>No se pudieron cargar las pruebas: ${escapeHtml(error.message)}</p><button type="button" data-retry-tests>Reintentar</button></div>`;
     }
   }
+
+  function syncScenarioSelection(scenarioId) {
+    elements.tests.querySelectorAll("[data-scenario-id]").forEach((row) => {
+      const selected = row.dataset.scenarioId === scenarioId;
+      row.classList.toggle("is-selected", selected);
+      row.setAttribute("aria-selected", String(selected));
+    });
+  }
+
+  window.addEventListener("algoinspect:scenario-changed", (event) => {
+    if (event.detail?.scenarioId) syncScenarioSelection(event.detail.scenarioId);
+  });
 
   function listMarkup(items, ordered = false) {
     const tag = ordered ? "ol" : "ul";
@@ -328,14 +372,14 @@
     if (markdownPath) {
       elements.readme.innerHTML = `<p class="readme-loading">Cargando README Markdown…</p>`;
       try {
-        const apiDocument = await window.AlgoInspectCatalogClient?.getAlgorithm(algorithm.id);
-        const markdown = apiDocument?.readme || await loadMarkdown(markdownPath);
+        const apiDocument = await window.AlgoInspectCatalogClient.getAlgorithm(algorithm.id);
+        const markdown = apiDocument.readme;
         if (requestId !== readmeRequestId) return;
         elements.readme.innerHTML = markdownToHtml(markdown);
         await renderMermaidDiagrams(elements.readme);
       } catch (error) {
         if (requestId !== readmeRequestId) return;
-        elements.readme.innerHTML = `<p class="readme-error">No se pudo cargar la documentación Markdown: ${escapeHtml(error.message)}</p>`;
+        elements.readme.innerHTML = `<div class="readme-error" role="alert"><p>No se pudo cargar la documentación Markdown: ${escapeHtml(error.message)}</p><button type="button" data-retry-readme>Reintentar</button></div>`;
       }
       return;
     }
@@ -572,7 +616,7 @@
       const shouldHide = closedTabs.has(tabName) || !visible.has(tabName);
       panel.hidden = shouldHide;
       panel.inert = shouldHide;
-      panel.setAttribute("role", splitActive && !shouldHide ? "region" : "tabpanel");
+      panel.setAttribute("role", "region");
     });
   }
 
@@ -581,7 +625,7 @@
       const tab = tabElement(tabName);
       const selected = !closedTabs.has(tabName) && activeTab === tabName;
       tab.classList.toggle("is-active", selected);
-      tab.setAttribute("aria-selected", String(selected));
+      tab.setAttribute("aria-pressed", String(selected));
       tab.tabIndex = selected ? 0 : -1;
     });
   }
@@ -704,6 +748,21 @@
     elements.liveRegion.textContent = "Diseño restablecido: todas las pestañas están abiertas en su orden original.";
   }
 
+  function moveDocumentToZone(tabName, zone) {
+    closedTabs.delete(tabName);
+    const targetIndex = zone === "upper-left" ? 0 : zone === "upper-right" ? 1 : 2;
+    moveTabToDockIndex(tabName, targetIndex);
+    setSplit(true, openTabs()[0], { announce: false, count: 3 });
+    activeTab = tabName;
+    syncDocumentVisibility();
+    syncTabState();
+    tabElement(tabName).focus();
+    const label = zone === "upper-left" ? "arriba a la izquierda" : zone === "upper-right" ? "arriba a la derecha" : "abajo";
+    elements.liveRegion.textContent = splitCount === 3
+      ? `${tabLabel(tabName)} colocada ${label}.`
+      : `${tabLabel(tabName)} colocada en el diseño apilado disponible para este ancho.`;
+  }
+
   elements.tabMenuToggles.forEach((toggle) => {
     toggle.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -716,9 +775,11 @@
     const target = tabMenuTarget;
     if (!command || !target) return;
     closeTabMenu();
-    if (command === "close") closeDocumentTab(target);
-    else if (command === "restore") restoreTabPosition(target);
-    else resetDocumentWorkspace();
+    if (command === "restore") restoreTabPosition(target);
+    else if (command === "move-upper-left") moveDocumentToZone(target, "upper-left");
+    else if (command === "move-upper-right") moveDocumentToZone(target, "upper-right");
+    else if (command === "move-lower") moveDocumentToZone(target, "lower");
+    else if (command === "reset") resetDocumentWorkspace();
   });
 
   elements.tabMenu.addEventListener("keydown", (event) => {
@@ -884,6 +945,27 @@
 
   elements.mergeButton.addEventListener("click", () => setSplit(false, splitTop));
   elements.languageSelect.addEventListener("change", () => renderTests());
+  elements.tests.addEventListener("click", (event) => {
+    if (event.target.closest("[data-retry-tests]")) renderTests();
+    const scenarioRow = event.target.closest("[data-scenario-id]");
+    if (scenarioRow) {
+      window.dispatchEvent(new CustomEvent("algoinspect:scenario-select", {
+        detail: { scenarioId: scenarioRow.dataset.scenarioId }
+      }));
+    }
+  });
+  elements.tests.addEventListener("keydown", (event) => {
+    const scenarioRow = event.target.closest("[data-scenario-id]");
+    if (!scenarioRow || !["Enter", " "].includes(event.key)) return;
+    event.preventDefault();
+    scenarioRow.click();
+  });
+  elements.readme.addEventListener("click", (event) => {
+    if (event.target.closest("[data-retry-readme]")) {
+      renderedAlgorithmId = null;
+      renderReadme();
+    }
+  });
 
   function finishSplitPointer() {
     if (!splitPointer) return;
@@ -976,7 +1058,7 @@
 
   elements.tabList.addEventListener("keydown", (event) => {
     const keys = ["ArrowLeft", "ArrowRight", "Home", "End"];
-    if (!keys.includes(event.key) || event.target.getAttribute("role") !== "tab") return;
+    if (!keys.includes(event.key) || !event.target.matches("[data-document-tab]")) return;
     event.preventDefault();
     const open = openTabs();
     const currentIndex = open.indexOf(activeTab);

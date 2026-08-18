@@ -1,0 +1,141 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.302
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - run: npm ci
+      - run: python -m pip install pytest
+      - run: npx playwright install chromium
+
+      # Auditoría de dependencias antes de construir: un aviso conocido no debe
+      # llegar a un artefacto publicable.
+      - run: npm audit --omit=dev --audit-level=moderate
+      - run: dotnet list AlgoInspect.Web.sln package --vulnerable --include-transitive
+
+      - run: npm run validate:catalog
+
+      # La matriz canónica completa: cada algoritmo del catálogo en cada lenguaje
+      # que implementa. `validate:kahn` es un subconjunto y no basta como cobertura.
+      - run: npm run validate:algorithms
+
+      # Una verificación que nunca ha fallado no demuestra nada: se introduce un
+      # error deliberado y se exige que la matriz lo localice.
+      - run: npm run validate:kahn:failure
+
+      - run: npm test
+      - run: npm run publish:app
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          name: algoinspect-web
+          path: artifacts/publish
+          if-no-files-found: error
+
+  container:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: docker build --tag algoinspect:${{ github.sha }} .
+
+      # Una imagen que compila pero no arranca pasaría el CI sin este paso.
+      - name: La imagen arranca y responde en /api/health
+        run: |
+          docker run --detach --name algoinspect-smoke \
+            --publish 8080:8080 \
+            --env ASPNETCORE_URLS=http://+:8080 \
+            --env "AllowedHosts=localhost;127.0.0.1" \
+            algoinspect:${{ github.sha }}
+
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8080/api/health > /dev/null; then
+              echo "La imagen respondió en el intento $attempt."
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "La imagen no respondió en /api/health tras 60 segundos."
+          docker logs algoinspect-smoke
+          exit 1
+
+      - name: Registro del contenedor si falló
+        if: failure()
+        run: docker logs algoinspect-smoke || true
+
+      - name: Detener el contenedor
+        if: always()
+        run: docker rm --force algoinspect-smoke || true
+
+      - name: Escaneo de vulnerabilidades de la imagen
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: algoinspect:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: CRITICAL,HIGH
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [csharp, javascript-typescript]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        if: matrix.language == 'csharp'
+        with:
+          dotnet-version: 10.0.302
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+
+      - uses: github/codeql-action/autobuild@v3
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}

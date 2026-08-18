@@ -1,8 +1,31 @@
 {
+  "schemaVersion": "1.0",
+  "contentVersion": "1.0.0",
   "id": "kahn",
   "name": "Algoritmo de Kahn",
-  "category": "Grafos",
+  "englishName": "Kahn's Algorithm",
+  "category": "graphs",
+  "paradigm": "Ordenamiento topológico por eliminación de fuentes",
+  "difficulty": "Intermedio",
   "summary": "Produce un orden topológico eliminando iterativamente vértices sin dependencias pendientes y detecta ciclos cuando no puede emitir todos los vértices.",
+  "invariant": "La cola contiene exactamente los vértices no emitidos cuyo grado de entrada es cero.",
+  "inputs": [
+    "Una lista ordenada de identificadores de vértice únicos.",
+    "Una lista de aristas dirigidas cuyos extremos pertenecen al conjunto de vértices."
+  ],
+  "outputs": [
+    "Estado complete y un orden topológico cuando se emiten todos los vértices.",
+    "Estado cycle, orden parcial y vértices bloqueados cuando existe un ciclo."
+  ],
+  "preconditions": [
+    "Cada vértice tiene un identificador único.",
+    "Cada arista referencia únicamente vértices declarados."
+  ],
+  "assumptions": [
+    "La representación usa listas de adyacencia y grados de entrada.",
+    "La cola respeta el orden de declaración de los vértices y de las aristas.",
+    "Las aristas duplicadas se consideran dependencias distintas y se procesan de forma simétrica."
+  ],
   "complexity": {
     "best": "O(V + E)",
     "average": "O(V + E)",
@@ -14,23 +37,51 @@
   "implementations": [
     {
       "language": "csharp",
+      "minimumVersion": ".NET 10 / C# 14",
+      "entryPoint": "AlgorithmAnalysis.Kahn.KahnAlgorithm.Execute",
       "source": "implementations/csharp/Kahn.cs",
-      "tests": "tests/csharp/KahnTests.cs"
+      "tests": "tests/csharp/KahnTests.cs",
+      "validationProfile": "kahn-csharp"
     },
     {
       "language": "javascript",
+      "minimumVersion": "Node.js 24",
+      "entryPoint": "kahn",
       "source": "implementations/javascript/kahn.js",
-      "tests": "tests/javascript/kahn.test.js"
+      "tests": "tests/javascript/kahn.test.js",
+      "validationProfile": "kahn-javascript"
     },
     {
       "language": "typescript",
+      "minimumVersion": "TypeScript 5.9 / Node.js 24",
+      "entryPoint": "kahn",
       "source": "implementations/typescript/kahn.ts",
-      "tests": "tests/typescript/kahn.test.ts"
+      "tests": "tests/typescript/kahn.test.ts",
+      "validationProfile": "kahn-typescript"
     },
     {
       "language": "python",
+      "minimumVersion": "Python 3.13",
+      "entryPoint": "kahn",
       "source": "implementations/python/kahn.py",
-      "tests": "tests/python/test_kahn.py"
+      "tests": "tests/python/test_kahn.py",
+      "validationProfile": "kahn-python"
+    }
+  ],
+  "references": [
+    {
+      "title": "Topological sorting of large networks",
+      "author": "Arthur B. Kahn",
+      "organization": "Communications of the ACM",
+      "year": 1962,
+      "url": "https://doi.org/10.1145/368996.369025"
+    },
+    {
+      "title": "Introduction to Algorithms, 4th edition",
+      "author": "Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein",
+      "organization": "MIT Press",
+      "year": 2022,
+      "url": "https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/"
     }
   ]
 }

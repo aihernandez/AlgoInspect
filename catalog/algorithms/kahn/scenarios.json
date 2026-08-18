@@ -2,15 +2,93 @@
   "algorithmId": "kahn",
   "version": "1.0.0",
   "scenarios": [
-    {"id":"empty","vertices":[],"edges":[],"expected":{"status":"complete","order":[]}},
-    {"id":"single","vertices":["A"],"edges":[],"expected":{"status":"complete","order":["A"]}},
-    {"id":"isolated","vertices":["A","B","C"],"edges":[],"expected":{"status":"complete","order":["A","B","C"]}},
-    {"id":"chain","vertices":["A","B","C","D"],"edges":[["A","B"],["B","C"],["C","D"]],"expected":{"status":"complete","order":["A","B","C","D"]}},
-    {"id":"branching","vertices":["A","B","C","D","E","F"],"edges":[["A","B"],["A","C"],["B","D"],["C","E"],["D","F"],["E","F"]],"expected":{"status":"complete","emitsAll":true}},
-    {"id":"disconnected","vertices":["A","B","C","D","E"],"edges":[["A","B"],["C","D"]],"expected":{"status":"complete","emitsAll":true}},
-    {"id":"self-loop","vertices":["A"],"edges":[["A","A"]],"expected":{"status":"cycle","order":[],"blocked":["A"]}},
-    {"id":"duplicate-edge","vertices":["A","B","C"],"edges":[["A","B"],["A","B"],["B","C"]],"expected":{"status":"complete","order":["A","B","C"]}},
-    {"id":"dependencies","vertices":["A","B","C","D","E","F"],"edges":[["A","C"],["A","D"],["B","D"],["C","E"],["D","E"],["D","F"],["E","F"]],"expected":{"status":"complete","emitsAll":true}},
-    {"id":"cycle","vertices":["A","B","C","D","E","F"],"edges":[["A","B"],["A","E"],["B","C"],["C","D"],["D","C"],["E","F"]],"expected":{"status":"cycle","order":["A","B","E","F"],"blocked":["C","D"]}}
+    {
+      "id": "empty",
+      "description": { "es": "Grafo vacío", "en": "Empty graph" },
+      "complexityCase": "boundary",
+      "vertices": [],
+      "edges": [],
+      "expected": { "status": "complete", "order": [], "blocked": [] }
+    },
+    {
+      "id": "single",
+      "description": { "es": "Un vértice aislado", "en": "Single isolated vertex" },
+      "complexityCase": "boundary",
+      "vertices": ["A"],
+      "edges": [],
+      "expected": { "status": "complete", "order": ["A"], "blocked": [] }
+    },
+    {
+      "id": "isolated",
+      "description": { "es": "Vértices aislados", "en": "Isolated vertices" },
+      "complexityCase": "sparse",
+      "vertices": ["A", "B", "C"],
+      "edges": [],
+      "expected": { "status": "complete", "order": ["A", "B", "C"], "blocked": [] }
+    },
+    {
+      "id": "chain",
+      "description": { "es": "Cadena lineal", "en": "Linear chain" },
+      "complexityCase": "linear",
+      "vertices": ["A", "B", "C", "D"],
+      "edges": [["A", "B"], ["B", "C"], ["C", "D"]],
+      "expected": { "status": "complete", "order": ["A", "B", "C", "D"], "blocked": [] }
+    },
+    {
+      "id": "branching",
+      "description": { "es": "DAG con ramas convergentes", "en": "Converging branched DAG" },
+      "complexityCase": "connected",
+      "vertices": ["A", "B", "C", "D", "E", "F"],
+      "edges": [["A", "B"], ["A", "C"], ["B", "D"], ["C", "E"], ["D", "F"], ["E", "F"]],
+      "expected": { "status": "complete", "emitsAll": true, "blocked": [] }
+    },
+    {
+      "id": "disconnected",
+      "description": { "es": "Componentes desconectados", "en": "Disconnected components" },
+      "complexityCase": "sparse",
+      "vertices": ["A", "B", "C", "D", "E"],
+      "edges": [["A", "B"], ["C", "D"]],
+      "expected": { "status": "complete", "emitsAll": true, "blocked": [] }
+    },
+    {
+      "id": "self-loop",
+      "description": { "es": "Autoarista", "en": "Self-loop" },
+      "complexityCase": "cycle",
+      "vertices": ["A"],
+      "edges": [["A", "A"]],
+      "expected": { "status": "cycle", "order": [], "blocked": ["A"] }
+    },
+    {
+      "id": "duplicate-edge",
+      "description": { "es": "Arista duplicada", "en": "Duplicate edge" },
+      "complexityCase": "multigraph",
+      "vertices": ["A", "B", "C"],
+      "edges": [["A", "B"], ["A", "B"], ["B", "C"]],
+      "expected": { "status": "complete", "order": ["A", "B", "C"], "blocked": [] }
+    },
+    {
+      "id": "dependencies",
+      "description": { "es": "DAG con varias fuentes", "en": "DAG with multiple sources" },
+      "complexityCase": "connected",
+      "vertices": ["A", "B", "C", "D", "E", "F"],
+      "edges": [["A", "C"], ["A", "D"], ["B", "D"], ["C", "E"], ["D", "E"], ["D", "F"], ["E", "F"]],
+      "expected": { "status": "complete", "emitsAll": true, "blocked": [] }
+    },
+    {
+      "id": "cycle",
+      "description": { "es": "Dependencias con ciclo", "en": "Dependencies containing a cycle" },
+      "complexityCase": "cycle",
+      "vertices": ["A", "B", "C", "D", "E", "F"],
+      "edges": [["A", "B"], ["A", "E"], ["B", "C"], ["C", "D"], ["D", "C"], ["E", "F"]],
+      "expected": { "status": "cycle", "order": ["A", "B", "E", "F"], "blocked": ["C", "D"] }
+    },
+    {
+      "id": "unknown-vertex",
+      "description": { "es": "Arista con vértice no declarado", "en": "Edge with an undeclared vertex" },
+      "complexityCase": "invalid",
+      "vertices": ["A"],
+      "edges": [["A", "B"]],
+      "expected": { "status": "invalid", "diagnostic": "unknown-vertex" }
+    }
   ]
 }

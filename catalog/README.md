@@ -1,10 +1,12 @@
-# Algorithm Catalog
+# Algorithm Catalog: contenido canónico
 
-Fuente versionada de documentación, escenarios, implementaciones y pruebas de algoritmos. Esta carpeta pertenece a la solución `AlgorithmCatalog.sln`; no contiene elementos de interfaz.
+Estado: implementado para Kahn, Búsqueda binaria y Bubble Sort en la versión de contenido `1.0.0`.
 
-## Cobertura
+Algorithm Catalog es la fuente canónica de documentación, escenarios, implementaciones y pruebas. `AlgorithmCatalog.sln` valida el contrato y la API publica el contenido sin una copia paralela en la web.
 
-El catálogo declara diez perfiles de lenguaje. La primera vertical verificable es Kahn con implementaciones en C#, JavaScript, TypeScript y Python. Un lenguaje declarado no se presenta como implementado hasta que aparezca en `algorithm.json` y sus archivos pasen la validación.
+## Cobertura publicada
+
+El catálogo declara diez perfiles planeados y publica cuatro por algoritmo: C#, JavaScript, TypeScript y Python. Las tres verticales comparten 11 escenarios cada una y una batería ejecutable por lenguaje. Los seis perfiles restantes no se presentan como disponibles.
 
 ## Estructura de cada algoritmo
 
@@ -17,4 +19,4 @@ algorithms/<id>/
 └── tests/<language>/
 ```
 
-Ejecutar `dotnet run --project src/Catalog/AlgorithmCatalog.Validation -- catalog` para validar el contenido.
+El contrato completo se define en [`../docs/architecture/CONTENT_MODEL.md`](../docs/architecture/CONTENT_MODEL.md). La evidencia reproducible está en [`../docs/user-stories/phase-1/CANONICAL_EXPANSION_EVIDENCE.md`](../docs/user-stories/phase-1/CANONICAL_EXPANSION_EVIDENCE.md).

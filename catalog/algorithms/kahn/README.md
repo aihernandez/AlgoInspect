@@ -13,7 +13,7 @@ El Algoritmo de Kahn construye un orden topológico para un grafo dirigido de de
 | Rendimiento | Mejor | Promedio | Peor |
 |---|---:|---:|---:|
 | Tiempo | `O(V + E)` | `O(V + E)` | `O(V + E)` |
-| Espacio auxiliar | `O(V)` | `O(V)` | `O(V)` |
+| Espacio auxiliar | `O(V + E)` | `O(V + E)` | `O(V + E)` |
 
 ## Problema
 
@@ -21,7 +21,7 @@ Dado un grafo dirigido de dependencias, producir un orden en el que cada vértic
 
 ## Contexto
 
-Kahn se utiliza para planificar tareas, compilaciones, cursos, migraciones, paquetes y módulos con dependencias. En este visualizador se ejecuta localmente sobre diez escenarios pequeños y deterministas. No usa red, base de datos ni ejecución de código del usuario.
+Kahn se utiliza para planificar tareas, compilaciones, cursos, migraciones, paquetes y módulos con dependencias. La visualización usa escenarios canónicos pequeños y deterministas, sin red, base de datos ni ejecución de código proporcionado por la persona usuaria.
 
 
 ## Entradas
@@ -140,7 +140,7 @@ V = número de vértices
 E = número de aristas
 ```
 
-El tiempo es `O(V + E)`. El espacio auxiliar es `O(V)` si la estructura de adyacencia se considera parte de la entrada; el espacio total incluyendo esa representación es `O(V + E)`. La tabla inicial resume las cotas por escenario.
+El tiempo es `O(V + E)`. Estas implementaciones reciben vértices y aristas y construyen grados, listas de adyacencia, cola y resultado; por ello su espacio auxiliar es `O(V + E)`. La tabla inicial resume las cotas por escenario.
 
 Cada vértice se encola y emite como máximo una vez. Cada arista se procesa una vez al decrementar el grado del sucesor. La aplicación conserva snapshots de la traza para la visualización; esos snapshots pueden consumir más memoria que el algoritmo puro.
 
@@ -205,7 +205,7 @@ El conjunto completo de escenarios, sus parámetros y las pruebas por lenguaje s
 | No comparar emitidos con `V` | Se cubre con casos de ciclo y auto-arista |
 | Suponer que existe un único orden | Se demuestra con varias fuentes y componentes desconectados |
 | Ignorar aristas paralelas | Se cubre con un caso de aristas duplicadas |
-| Referencias a nodos inexistentes | Reservado para diagnóstico de entrada del analizador libre; no es una ejecución válida del algoritmo |
+| Referencias a nodos inexistentes | El escenario canónico `unknown-vertex` exige un diagnóstico de entrada inválida antes de ejecutar el algoritmo |
 
 ## Fuentes
 

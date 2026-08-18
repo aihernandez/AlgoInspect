@@ -1,5 +1,6 @@
 {
   "schemaVersion": "1.0",
+  "contentVersion": "1.0.0",
   "languages": [
     { "id": "csharp", "displayName": "C#", "fileExtension": "cs", "isInitialLanguage": true },
     { "id": "java", "displayName": "Java", "fileExtension": "java", "isInitialLanguage": false },
@@ -12,5 +13,5 @@
     { "id": "c", "displayName": "C", "fileExtension": "c", "isInitialLanguage": false },
     { "id": "cpp", "displayName": "C++", "fileExtension": "cpp", "isInitialLanguage": false }
   ],
-  "algorithms": ["kahn"]
+  "algorithms": ["kahn", "binary-search", "bubble-sort"]
 }

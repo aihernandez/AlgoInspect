@@ -1,249 +1,280 @@
 const { test, expect } = require("@playwright/test");
 
-const url = process.env.WEB_URL || "http://127.0.0.1:4398/";
-
-async function chooseAlgorithm(page, query, name) {
-  await page.locator("#algorithmSearch").focus();
-  await page.locator("#algorithmSearch").fill(query);
-  await expect(page.locator("#algorithmMenu")).toBeVisible();
-  await page.getByRole("option", { name }).click();
+async function openCanonicalLab(page, path = "/") {
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
+  await page.goto(path, { waitUntil: "networkidle" });
+  await page.waitForFunction(() => document.documentElement.dataset.catalogReady === "true");
+  return pageErrors;
 }
 
-test("la web consume el catálogo servido por ASP.NET Core", async ({ page }) => {
-  const catalogResponse = await page.request.get("/api/catalog");
+test("la API publica tres algoritmos bajo una sola versión canónica", async ({ request }) => {
+  const catalogResponse = await request.get("/api/catalog", {
+    headers: { "X-AlgoInspect-Schema-Version": "1.0" }
+  });
   expect(catalogResponse.ok()).toBe(true);
   const catalog = await catalogResponse.json();
-  expect(catalog.languages).toHaveLength(10);
-  expect(catalog.algorithms).toContainEqual(expect.objectContaining({ id: "kahn" }));
+  expect(catalog.schemaVersion).toBe("1.0");
+  expect(catalog.contentVersion).toBe("1.0.0");
+  expect(catalog.algorithms).toHaveLength(3);
+  for (const algorithmId of ["kahn", "binary-search", "bubble-sort"]) {
+    expect(catalog.algorithms).toContainEqual(expect.objectContaining({
+      id: algorithmId,
+      contentVersion: "1.0.0",
+      availableLanguages: ["csharp", "javascript", "typescript", "python"]
+    }));
+  }
 
-  await page.goto(url, { waitUntil: "networkidle" });
-  await chooseAlgorithm(page, "kahn", /Algoritmo de Kahn/);
-  await page.locator("#testsTab").click();
-
-  await expect(page.locator("#testsTabPanel")).toContainText("API .NET");
-  await expect(page.locator("#testsTabPanel")).toContainText("10");
+  const scenariosResponse = await request.get("/api/algorithms/kahn/scenarios");
+  expect(scenariosResponse.ok()).toBe(true);
+  const scenarios = await scenariosResponse.json();
+  expect(scenarios.contentVersion).toBe("1.0.0");
+  expect(scenarios.scenarios).toHaveLength(11);
+  expect(scenarios.scenarios.at(-1)).toEqual(expect.objectContaining({
+    id: "unknown-vertex",
+    expected: { status: "invalid", diagnostic: "unknown-vertex" }
+  }));
 });
 
-test("código y README comparten algoritmo sin alterar el visualizador", async ({ page }) => {
-  const pageErrors = [];
-  page.on("pageerror", (error) => pageErrors.push(error.message));
-  await page.setViewportSize({ width: 1366, height: 768 });
-  await page.goto(url, { waitUntil: "networkidle" });
+test("código, README, pruebas y traza proceden de la API sin prototype", async ({ page }) => {
+  const requested = [];
+  page.on("request", (request) => requested.push(new URL(request.url()).pathname));
+  const pageErrors = await openCanonicalLab(page);
 
   await expect(page).toHaveTitle(/Laboratorio visual de algoritmos/);
-  await expect(page.locator("#editorTabList [role=tab]")).toHaveCount(3);
-  await expect(page.locator("#codeTab")).toHaveAttribute("aria-selected", "true");
-  await expect(page.locator("#codeTabPanel")).toBeVisible();
-  await expect(page.locator("#readmeTabPanel")).toBeHidden();
-  await expect(page.locator("#stageCanvas svg")).toBeVisible();
-
-  const coverage = await page.evaluate(() => {
-    const ids = window.AlgorithmCatalog.algorithms.map((algorithm) => algorithm.id);
-    const entries = window.AlgorithmReadmeContent.entries;
-    return {
-      catalog: ids.length,
-      readmes: Object.keys(entries).length,
-      missing: ids.filter((id) => !entries[id]),
-      incomplete: ids.filter((id) => {
-        const item = entries[id];
-        return !item?.principle || !item?.history?.paragraphs?.length || !item?.mechanics?.length || !item?.useWhen?.length || !item?.avoidWhen?.length || !item?.references?.length;
-      })
-    };
-  });
-  expect(coverage).toEqual({ catalog: 21, readmes: 21, missing: [], incomplete: [] });
+  await expect(page.locator("#selectedAlgorithmName")).toHaveText("Algoritmo de Kahn");
+  await expect(page.locator("#languageSelect option")).toHaveCount(4);
+  await expect(page.locator("#languageCoverage")).toHaveText("4 implementaciones canónicas");
+  await expect(page.locator("#fallbackEditor")).toHaveValue(/public static class KahnAlgorithm/);
+  await expect(page.locator("#sourceModeLabel")).toHaveText("Implementación canónica validada");
 
   await page.locator("#readmeTab").click();
-  await expect(page.locator("#readmeTab")).toHaveAttribute("aria-selected", "true");
-  await expect(page.locator("#readmeTabPanel")).toBeVisible();
-  await expect(page.locator("#codeTabPanel")).toBeHidden();
-  await expect(page.locator("#algorithmReadme h2")).toHaveText("Búsqueda binaria");
-  await expect(page.locator("#algorithmReadme")).toContainText("Una idea histórica, no un inventor único");
-  await expect(page.locator(".readme-complexity tbody tr")).toHaveCount(3);
-  await expect(page.locator(".readme-reference-list li")).toHaveCount(2);
-  await expect(page.locator("#visualTitle")).toHaveText("Búsqueda binaria");
+  await expect(page.locator("#algorithmReadme h1")).toHaveText("Algoritmo de Kahn");
+  await expect(page.locator("#algorithmReadme")).toContainText("A. B. Kahn");
 
-  await page.locator("#languageSelect").selectOption("python");
-  await expect(page.locator("#codeTabFileName")).toHaveText(/\.py$/);
-  await expect(page.locator("#algorithmReadme h2")).toHaveText("Búsqueda binaria");
+  await page.locator("#testsTab").click();
+  await expect(page.locator("#algorithmTests")).toContainText("API · v1.0.0");
+  await expect(page.locator("#algorithmTests .tests-summary strong").first()).toHaveText("11");
+  await expect(page.locator("#algorithmTests .tests-table tbody tr")).toHaveCount(11);
+  await expect(page.locator("#algorithmTests")).toContainText("kahn-csharp");
 
-  await chooseAlgorithm(page, "quick", /^Quick Sort/);
-  await expect(page.locator("#readmeTabPanel")).toBeVisible();
-  await expect(page.locator("#algorithmReadme h2")).toHaveText("Quick Sort");
-  await expect(page.locator("#algorithmReadme")).toContainText("C. A. R. Hoare");
-  await expect(page.locator(".readme-complexity tbody tr").nth(2)).toContainText("O(n²)");
-  await expect(page.locator("#visualTitle")).toHaveText("Quick Sort");
+  const canonical = await page.evaluate(() => ({
+    id: window.AlgoInspectCanonical.algorithmId,
+    version: window.AlgoInspectCanonical.contentVersion,
+    scenarios: window.AlgoInspectCanonical.scenarios.length,
+    algorithms: window.AlgorithmCatalog.algorithms.length,
+    scriptSources: [...document.scripts].map((script) => script.src)
+  }));
+  expect(canonical).toEqual(expect.objectContaining({ id: "kahn", version: "1.0.0", scenarios: 11, algorithms: 3 }));
+  expect(canonical.scriptSources.some((source) => source.includes("prototype-"))).toBe(false);
+  expect(requested.some((path) => path.includes("prototype-"))).toBe(false);
+  expect(requested).toEqual(expect.arrayContaining([
+    "/api/catalog",
+    "/api/algorithms/kahn",
+    "/api/algorithms/kahn/scenarios",
+    "/api/algorithms/kahn/implementations/csharp",
+    "/api/algorithms/kahn/implementations/javascript",
+    "/api/algorithms/kahn/implementations/typescript",
+    "/api/algorithms/kahn/implementations/python"
+  ]));
+  expect(pageErrors).toEqual([]);
+});
 
-  await page.locator("#readmeTab").focus();
-  await page.keyboard.press("ArrowLeft");
-  await expect(page.locator("#codeTab")).toBeFocused();
-  await expect(page.locator("#codeTabPanel")).toBeVisible();
-  await expect(page.locator("#sourceFileName")).toHaveText(/\.py$/);
-  await expect(page.locator("#stageCanvas svg")).toBeVisible();
+test("lenguaje, escenario, URL, código, pruebas y traza permanecen sincronizados", async ({ page }) => {
+  const pageErrors = await openCanonicalLab(page, "/?algorithm=kahn&language=python&scenario=cycle");
 
-  await page.locator("#codeTab").focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(page.locator("#readmeTab")).toBeFocused();
-  await expect(page.locator("#algorithmReadme h2")).toHaveText("Quick Sort");
+  await expect(page.locator("#languageSelect")).toHaveValue("python");
+  await expect(page.locator("#presetSelect")).toHaveValue("cycle");
+  await expect(page.locator("#sourceFileName")).toHaveText("kahn.py");
+  await expect(page.locator("#fallbackEditor")).toHaveValue(/def kahn\(graph: Graph\)/);
 
+  await page.locator("#testsTab").click();
+  await expect(page.locator("#algorithmTests")).toContainText("kahn-python");
+  await expect(page.locator("#algorithmTests .test-code-block")).toContainText("test_canonical_scenario");
+
+  await page.locator("#timelineRange").evaluate((element) => {
+    element.value = element.max;
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await expect(page.locator("#stepTitle")).toHaveText("No existe un orden topológico");
+  await expect(page.locator("#stepExplanation")).toContainText("4 de 6");
+  await expect(page).toHaveURL(/algorithm=kahn/);
+  await expect(page).toHaveURL(/language=python/);
+  await expect(page).toHaveURL(/scenario=cycle/);
+
+  await page.locator("#presetSelect").selectOption("unknown-vertex");
+  await expect(page.locator("#stepTitle")).toHaveText("Entrada canónica inválida");
+  await expect(page.locator("#stepExplanation")).toContainText("A → B");
+  await expect(page).toHaveURL(/scenario=unknown-vertex/);
+  expect(pageErrors).toEqual([]);
+});
+
+test("el modo claro se aplica, se anuncia y permanece al recargar", async ({ page }) => {
+  const pageErrors = await openCanonicalLab(page);
+
+  await expect(page.locator("#themeToggle")).toHaveAttribute("aria-label", "Activar modo claro");
+  await page.locator("#themeToggle").click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator("#themeToggle")).toHaveAttribute("aria-label", "Activar modo oscuro");
+  await expect(page.locator("#themeToggle")).toHaveAttribute("aria-pressed", "true");
+
+  await page.reload({ waitUntil: "networkidle" });
+  await page.waitForFunction(() => document.documentElement.dataset.catalogReady === "true");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator(".player-panel")).toHaveCSS("background-color", "rgb(248, 250, 252)");
+  await expect(page.locator("#executionDock")).toHaveCSS("background-color", "rgb(248, 250, 252)");
+  await expect(page.locator(".brand-lockup-light")).toBeVisible();
+
+  await page.locator("#readmeTab").click();
+  await expect(page.locator(".readme-markdown-table th").first()).toHaveCSS("background-color", "rgb(237, 243, 249)");
+  await expect(page.locator(".readme-markdown-table td").first()).toHaveCSS("color", "rgb(48, 64, 87)");
+  await page.locator("#testsTab").click();
+  await expect(page.locator(".test-code-block")).toHaveCSS("background-color", "rgb(248, 250, 252)");
+  await expect(page.locator(".test-code-block")).toHaveCSS("color", "rgb(23, 32, 51)");
+
+  await page.locator("#timeComplexityCell").click();
+  await expect(page.locator("#complexityPopover")).toBeVisible();
+  await expect(page.locator("#complexityPopover")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.locator("#complexityMiniChart")).toHaveCSS("background-color", "rgb(248, 250, 252)");
+  await page.locator("#timeComplexityCell").click();
+  await page.locator("#algorithmSearch").click();
+  await expect(page.locator("#algorithmMenu")).toBeVisible();
+  await expect(page.locator("#algorithmMenu")).toHaveCSS("background-color", "rgb(255, 255, 255)");
+  await expect(page.locator(".catalog-group-heading").first()).toHaveCSS("background-color", "rgb(238, 243, 248)");
+  await page.keyboard.press("Escape");
+
+  await page.locator("#themeToggle").click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator(".brand-lockup-dark")).toBeVisible();
+  await expect(page.locator(".brand-lockup-light")).toBeHidden();
+  expect(pageErrors).toEqual([]);
+});
+
+test("el buscador presenta las tres verticales publicadas", async ({ page }) => {
+  const pageErrors = await openCanonicalLab(page);
   await page.locator("#algorithmSearch").focus();
-  await page.locator("#algorithmSearch").fill("algoritmo propio");
-  await page.keyboard.press("Enter");
-  await expect(page.locator("#freeAnalysisView")).toBeVisible();
-  await expect(page.locator("#algorithmReadme")).toContainText("README no disponible para código libre");
-
-  const layout = await page.evaluate(() => {
-    const source = document.querySelector("#sourcePanel").getBoundingClientRect();
-    const visual = document.querySelector("#visualizationPanel").getBoundingClientRect();
-    const panel = document.querySelector("#readmeTabPanel");
-    return {
-      sideBySide: source.right <= visual.left,
-      readmeScrollable: panel.scrollHeight > panel.clientHeight,
-      overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
-    };
-  });
-  expect(layout.sideBySide).toBe(true);
-  expect(layout.readmeScrollable).toBe(false);
-  expect(layout.overflow).toBeLessThanOrEqual(1);
+  await page.locator("#algorithmSearch").fill("bubble");
+  await expect(page.getByRole("option", { name: /Ordenamiento burbuja/ })).toHaveCount(1);
+  await page.locator("#algorithmSearch").fill("kahn");
+  await expect(page.getByRole("option", { name: /Algoritmo de Kahn/ })).toHaveCount(1);
   expect(pageErrors).toEqual([]);
 });
 
-test("el README conserva dos pestañas y scroll interno en móvil", async ({ page }) => {
-  const pageErrors = [];
-  page.on("pageerror", (error) => pageErrors.push(error.message));
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(url, { waitUntil: "networkidle" });
-
-  await expect(page.locator("#editorTabList [role=tab]")).toHaveCount(3);
+test("Binary Search sincroniza código, README, pruebas y traza canónicos", async ({ page }) => {
+  const pageErrors = await openCanonicalLab(page, "/?algorithm=binary-search&language=javascript&scenario=duplicates");
+  await expect(page.locator("#selectedAlgorithmName")).toHaveText("Búsqueda binaria");
+  await expect(page.locator("#sourceFileName")).toHaveText("binary-search.js");
+  await expect(page.locator("#fallbackEditor")).toHaveValue(/function binarySearch/);
   await page.locator("#readmeTab").click();
-  await expect(page.locator("#algorithmReadme h2")).toHaveText("Búsqueda binaria");
-  const mobile = await page.evaluate(() => {
-    const tabs = [...document.querySelectorAll("#editorTabList [role=tab]")].map((element) => element.getBoundingClientRect());
-    const panel = document.querySelector("#readmeTabPanel");
-    return {
-      equalTabs: Math.abs(tabs[0].width - tabs[1].width) < 2,
-      panelScrolls: panel.scrollHeight > panel.clientHeight,
-      pageOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth
-    };
+  await expect(page.locator("#algorithmReadme h1")).toHaveText("Búsqueda binaria");
+  await page.locator("#testsTab").click();
+  await expect(page.locator("#algorithmTests .tests-table tbody tr")).toHaveCount(11);
+  await expect(page.locator("#algorithmTests")).toContainText("binary-search-javascript");
+  await page.locator('[data-scenario-id="middle"]').click();
+  await expect(page.locator("#presetSelect")).toHaveValue("middle");
+  await expect(page.locator('[data-scenario-id="middle"]')).toHaveClass(/is-selected/);
+  await expect(page).toHaveURL(/scenario=middle/);
+  await page.locator("#timelineRange").evaluate((element) => {
+    element.value = element.max;
+    element.dispatchEvent(new Event("input", { bubbles: true }));
   });
-  expect(mobile.equalTabs).toBe(true);
-  expect(mobile.panelScrolls).toBe(true);
-  expect(mobile.pageOverflow).toBeLessThanOrEqual(1);
+  await expect(page.locator("#stepTitle")).toHaveText("Objetivo encontrado");
+  await expect(page.locator("#stepExplanation")).toContainText("índice 2");
+  await page.locator("#codeTab").click();
+  await expect(page.locator("#codeZoomControls")).toHaveCount(0);
+  await page.locator("#monacoEditor").hover();
+  await page.keyboard.down("Control");
+  await page.mouse.wheel(0, -120);
+  await page.keyboard.up("Control");
   expect(pageErrors).toEqual([]);
 });
 
-test("los tabs se reordenan, dividen el panel y permiten cambiar la proporción", async ({ page }) => {
-  const pageErrors = [];
-  page.on("pageerror", (error) => pageErrors.push(error.message));
-  await page.setViewportSize({ width: 1366, height: 768 });
-  await page.goto(url, { waitUntil: "networkidle" });
-
-  const splitBox = await page.locator("#documentSplit").boundingBox();
-  await page.locator("#readmeTab").dragTo(page.locator("#documentSplit"), {
-    targetPosition: { x: splitBox.width / 2, y: splitBox.height * 0.22 }
+test("Bubble Sort demuestra terminación temprana desde escenarios canónicos", async ({ page }) => {
+  const pageErrors = await openCanonicalLab(page, "/?algorithm=bubble-sort&language=python&scenario=sorted");
+  await expect(page.locator("#selectedAlgorithmName")).toHaveText("Ordenamiento burbuja");
+  await expect(page.locator("#sourceFileName")).toHaveText("bubble_sort.py");
+  await expect(page.locator("#fallbackEditor")).toHaveValue(/def bubble_sort/);
+  await page.locator("#testsTab").click();
+  await expect(page.locator("#algorithmTests .tests-table tbody tr")).toHaveCount(11);
+  await expect(page.locator("#algorithmTests")).toContainText("bubble-sort-python");
+  await page.locator("#timelineRange").evaluate((element) => {
+    element.value = Math.max(0, Number(element.max) - 1);
+    element.dispatchEvent(new Event("input", { bubbles: true }));
   });
-
-  await expect(page.locator("#documentSplit")).toHaveClass(/is-split/);
-  await expect(page.locator("#documentSplitResizer")).toBeVisible();
-  await expect(page.locator("#mergeDocumentsButton")).toBeVisible();
-  await expect(page.locator("#codeTabPanel")).toBeVisible();
-  await expect(page.locator("#readmeTabPanel")).toBeVisible();
-  await expect(page.locator("#documentSplit > :first-child")).toHaveId("readmeTabPanel");
-  await expect(page.locator("#algorithmReadme h2")).toHaveText("Búsqueda binaria");
-  const editorGeometry = await page.evaluate(() => {
-    const frame = document.querySelector("#codeTabPanel .editor-frame");
-    const editor = document.querySelector("#monacoEditor");
-    return { frame: frame.clientHeight, editor: editor.clientHeight };
-  });
-  expect(editorGeometry.editor).toBeLessThanOrEqual(editorGeometry.frame + 1);
-  const codeScroll = page.locator("#codeTabPanel .monaco-scrollable-element.editor-scrollable");
-  const scrollTopBefore = await page.evaluate(() => window.monaco?.editor?.getEditors?.()[0]?.getScrollTop?.() || 0);
-  const editorFrame = await page.locator("#codeTabPanel .editor-frame").boundingBox();
-  await page.mouse.move(editorFrame.x + editorFrame.width / 2, editorFrame.y + editorFrame.height / 2);
-  await page.mouse.wheel(0, 500);
-  await expect.poll(() => page.evaluate(() => window.monaco?.editor?.getEditors?.()[0]?.getScrollTop?.() || 0)).toBeGreaterThan(scrollTopBefore);
-
-  const layoutBefore = await page.locator("#documentSplit").evaluate((element) => ({
-    top: element.children[0].getBoundingClientRect().height,
-    bottom: element.children[2].getBoundingClientRect().height,
-    ratio: document.querySelector("#documentSplitResizer").getAttribute("aria-valuenow")
-  }));
-  await page.locator("#documentSplitResizer").focus();
-  await page.keyboard.press("ArrowDown");
-  await page.keyboard.press("ArrowDown");
-  const layoutAfter = await page.locator("#documentSplit").evaluate((element) => ({
-    top: element.children[0].getBoundingClientRect().height,
-    bottom: element.children[2].getBoundingClientRect().height,
-    ratio: document.querySelector("#documentSplitResizer").getAttribute("aria-valuenow")
-  }));
-  expect(Number(layoutAfter.ratio)).toBeGreaterThan(Number(layoutBefore.ratio));
-  expect(layoutAfter.top).toBeGreaterThan(layoutBefore.top);
-  expect(layoutAfter.bottom).toBeLessThan(layoutBefore.bottom);
-
-  await page.locator("#mergeDocumentsButton").click();
-  await expect(page.locator("#documentSplit")).not.toHaveClass(/is-split/);
-  await expect(page.locator("#readmeTabPanel")).toBeVisible();
-  await expect(page.locator("#codeTabPanel")).toBeHidden();
-
-  const readmeTabBox = await page.locator("#readmeTab").boundingBox();
-  await page.locator("#codeTab").dragTo(page.locator("#readmeTab"), {
-    targetPosition: { x: readmeTabBox.width - 4, y: readmeTabBox.height / 2 }
-  });
-  await expect(page.locator("#editorTabList [role=tab]").first()).toHaveId("readmeTab");
-  await expect(page.locator("#editorTabList [role=tab]")).toContainText(["README.md", "BinarySearch.cs", "Pruebas"]);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  await expect(page.locator("#stepTitle")).toHaveText("Terminar anticipadamente");
   expect(pageErrors).toEqual([]);
 });
 
-test("los documentos se acoplan en tres zonas y las acciones restauran el diseño", async ({ page }) => {
-  const pageErrors = [];
-  page.on("pageerror", (error) => pageErrors.push(error.message));
-  await page.setViewportSize({ width: 1366, height: 768 });
-  await page.goto(url, { waitUntil: "networkidle" });
-
-  let splitBox = await page.locator("#documentSplit").boundingBox();
-  await page.locator("#readmeTab").dragTo(page.locator("#documentSplit"), {
-    targetPosition: { x: splitBox.width / 2, y: splitBox.height * 0.2 }
-  });
-  await expect(page.locator("#documentSplit")).toHaveClass(/is-split/);
-
-  splitBox = await page.locator("#documentSplit").boundingBox();
-  await page.locator("#testsTab").dragTo(page.locator("#documentSplit"), {
-    targetPosition: { x: splitBox.width * 0.78, y: splitBox.height * 0.2 }
-  });
-
+test("el menú accesible mueve documentos a las tres zonas sin arrastre", async ({ page }) => {
+  const pageErrors = await openCanonicalLab(page);
+  await page.locator('[data-tab-actions="code"]').click();
+  await page.getByRole("menuitem", { name: /Mover arriba a la derecha/ }).click();
   await expect(page.locator("#documentSplit")).toHaveClass(/is-triple/);
-  await expect(page.locator("#documentSplitResizerVertical")).toBeVisible();
-  await expect(page.locator("#documentSplitResizerBottom")).toBeVisible();
-  await expect(page.locator("#readmeTabPanel")).toHaveCSS("grid-area", "top-left");
-  await expect(page.locator("#testsTabPanel")).toHaveCSS("grid-area", "top-right");
-  await expect(page.locator("#codeTabPanel")).toHaveCSS("grid-area", "bottom");
+  await expect(page.locator("#codeTabPanel")).toHaveCSS("grid-area", "top-right");
 
   await page.locator('[data-tab-actions="tests"]').click();
-  await expect(page.locator("#tabActionsMenu")).toBeVisible();
-  const menuBox = await page.locator("#tabActionsMenu").boundingBox();
-  expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(1366);
-  expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(768);
-  await page.getByRole("menuitem", { name: /Volver a su posición/ }).click();
+  await page.getByRole("menuitem", { name: /Mover abajo/ }).click();
   await expect(page.locator("#testsTabPanel")).toHaveCSS("grid-area", "bottom");
 
-  await page.locator('[data-tab-actions="code"]').click();
-  await page.getByRole("menuitem", { name: /Volver a su posición/ }).click();
-  await expect(page.locator("#codeTabPanel")).toHaveCSS("grid-area", "top-left");
-  await expect(page.locator("#readmeTabPanel")).toHaveCSS("grid-area", "top-right");
-
   await page.locator('[data-tab-actions="readme"]').click();
-  await page.getByRole("menuitem", { name: /Cerrar pestaña/ }).click();
-  await expect(page.locator('[data-tab-shell="readme"]')).toBeHidden();
-  await expect(page.locator("#readmeTabPanel")).toBeHidden();
-  await expect(page.locator("#documentSplit")).not.toHaveClass(/is-triple/);
+  await page.getByRole("menuitem", { name: /Mover arriba a la izquierda/ }).click();
+  await expect(page.locator("#readmeTabPanel")).toHaveCSS("grid-area", "top-left");
 
-  await page.locator('[data-tab-actions="code"]').click();
-  await page.getByRole("menuitem", { name: /Restablecer diseño/ }).click();
-  await expect(page.locator("#documentSplit")).not.toHaveClass(/is-split/);
-  await expect(page.locator("#editorTabList [role=tab]")).toHaveCount(3);
-  await expect(page.locator("#editorTabList [role=tab]")).toContainText(["BinarySearch.cs", "README.md", "Pruebas"]);
-  await expect(page.locator("#codeTabPanel")).toBeVisible();
-  await expect(page.locator("#readmeTabPanel")).toBeHidden();
-  await expect(page.locator("#testsTabPanel")).toBeHidden();
+  await page.locator("#readmeTab").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.locator("#codeTab")).toBeFocused();
   expect(pageErrors).toEqual([]);
+});
+
+test("la vertical permanece utilizable en pantalla estrecha", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const pageErrors = await openCanonicalLab(page);
+  await page.locator("#readmeTab").click();
+  await expect(page.locator("#algorithmReadme h1")).toHaveText("Algoritmo de Kahn");
+  const geometry = await page.evaluate(() => ({
+    overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    readable: document.querySelector("#readmeTabPanel").clientWidth >= 300,
+    reducedMotionDeclared: [...document.styleSheets].some((sheet) => {
+      try { return [...sheet.cssRules].some((rule) => rule.media?.mediaText?.includes("prefers-reduced-motion")); } catch { return false; }
+    })
+  }));
+  expect(geometry.overflow).toBeLessThanOrEqual(1);
+  expect(geometry.readable).toBe(true);
+  expect(geometry.reducedMotionDeclared).toBe(true);
+  expect(pageErrors).toEqual([]);
+});
+
+test("un catálogo inconsistente muestra recuperación explícita y permite reintentar", async ({ page }) => {
+  let attempts = 0;
+  await page.route("**/api/catalog", async (route) => {
+    attempts += 1;
+    if (attempts === 1) {
+      await route.fulfill({
+        status: 503,
+        contentType: "application/problem+json",
+        body: JSON.stringify({ code: "catalog-inconsistent", detail: "Contenido inválido" })
+      });
+    } else {
+      await route.continue();
+    }
+  });
+  await page.goto("/", { waitUntil: "networkidle" });
+  await expect(page.locator("#catalogBootstrapError")).toBeVisible();
+  await expect(page.locator("#catalogBootstrapErrorTitle")).toHaveText("Catálogo temporalmente inválido");
+  await expect(page.locator("#catalogBootstrapError")).toBeFocused();
+  await page.locator("#catalogBootstrapRetry").click();
+  await page.waitForFunction(() => document.documentElement.dataset.catalogReady === "true");
+  await expect(page.locator("#catalogBootstrapError")).toBeHidden();
+  await expect(page.locator("#selectedAlgorithmName")).toHaveText("Algoritmo de Kahn");
+});
+
+test("una versión incompatible se distingue de un fallo recuperable", async ({ page }) => {
+  await page.route("**/api/algorithms/kahn", (route) => route.fulfill({
+    status: 409,
+    contentType: "application/problem+json",
+    body: JSON.stringify({ code: "schema-version-incompatible", detail: "Versión incompatible" })
+  }));
+  await page.goto("/", { waitUntil: "networkidle" });
+  await expect(page.locator("#catalogBootstrapErrorTitle")).toHaveText("Contrato incompatible");
+  await expect(page.locator("#catalogBootstrapRetry")).toBeHidden();
 });

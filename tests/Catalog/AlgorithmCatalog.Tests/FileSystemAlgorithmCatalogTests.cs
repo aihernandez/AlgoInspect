@@ -15,7 +15,10 @@ public sealed class FileSystemAlgorithmCatalogTests
 
         Assert.Equal("1.0", result.SchemaVersion);
         Assert.Equal(10, result.Languages.Count);
+        Assert.Equal(3, result.Algorithms.Count);
         Assert.Contains(result.Algorithms, algorithm => algorithm.Id == "kahn");
+        Assert.Contains(result.Algorithms, algorithm => algorithm.Id == "binary-search");
+        Assert.Contains(result.Algorithms, algorithm => algorithm.Id == "bubble-sort");
     }
 
     [Fact]
@@ -27,8 +30,12 @@ public sealed class FileSystemAlgorithmCatalogTests
 
         Assert.NotNull(result);
         Assert.Contains("Kahn", result.Readme, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(10, result.Scenarios.GetProperty("scenarios").GetArrayLength());
+        Assert.Equal("1.0", result.SchemaVersion);
+        Assert.Equal("1.0.0", result.ContentVersion);
+        Assert.Equal(11, result.Scenarios.GetArrayLength());
         Assert.Equal(4, result.Implementations.Count);
+        Assert.Equal(4, result.Algorithm.AvailableLanguages.Count);
+        Assert.NotEmpty(result.References);
     }
 
     [Fact]
@@ -44,6 +51,7 @@ public sealed class FileSystemAlgorithmCatalogTests
         Assert.NotNull(result);
         Assert.Equal("kahn.py", result.FileName);
         Assert.Contains("def kahn", result.Source, StringComparison.Ordinal);
-        Assert.Contains("test_orders_a_chain", result.Tests, StringComparison.Ordinal);
+        Assert.Contains("test_canonical_scenario", result.Tests, StringComparison.Ordinal);
+        Assert.Equal("kahn-python", result.ValidationProfile);
     }
 }

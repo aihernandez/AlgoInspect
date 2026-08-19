@@ -90,7 +90,7 @@ test("lenguaje, escenario, URL, código, pruebas y traza permanecen sincronizado
 
   await page.locator("#testsTab").click();
   await expect(page.locator("#algorithmTests")).toContainText("kahn-python");
-  await expect(page.locator("#algorithmTests .test-code-block")).toContainText("test_canonical_scenario");
+  await expect(page.locator("#algorithmTests .test-code-block")).toContainText("def test_kahn_returns_expected_result");
 
   await page.locator("#timelineRange").evaluate((element) => {
     element.value = element.max;

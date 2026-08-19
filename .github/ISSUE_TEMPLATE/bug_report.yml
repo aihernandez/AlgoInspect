@@ -1,0 +1,95 @@
+name: Bug report
+description: Something in the catalog, the API or the web lab behaves incorrectly.
+title: "[Bug]: "
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report.
+
+        **Do not use this form for security vulnerabilities.** Follow
+        [SECURITY.md](https://github.com/aihernandez/AlgoInspect/blob/main/SECURITY.md)
+        instead.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the behavior you observed, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: The exact steps someone else can follow to see the same result.
+      placeholder: |
+        1. Run `npm run dev`
+        2. Open http://127.0.0.1:4398
+        3. Select the "kahn" algorithm and the "..." scenario
+        4. Step forward three times
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the project?
+      options:
+        - Algorithm Catalog (content, scenarios, implementations)
+        - AlgoInspect Web: API
+        - AlgoInspect Web: visual lab
+        - Build, tests or CI
+        - Documentation
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: algorithm
+    attributes:
+      label: Algorithm and scenario
+      description: If the issue is specific to catalog content, which one?
+      placeholder: "kahn / cycle-detected"
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Implementation language
+      description: If the issue is specific to one language implementation.
+      options:
+        - Not language specific
+        - C#
+        - Python
+        - JavaScript
+        - TypeScript
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Output of `dotnet --version`, `node --version`, `python --version`, plus your OS and browser.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or output
+      description: Console output, failing test output, or browser console errors. This is automatically formatted as code.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and this has not been reported.
+          required: true
+        - label: I am running against the latest `main`.
+          required: false
+        - label: I agree to follow this project's [Code of Conduct](https://github.com/aihernandez/AlgoInspect/blob/main/CODE_OF_CONDUCT.md).
+          required: true

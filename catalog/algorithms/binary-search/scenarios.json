@@ -1,0 +1,17 @@
+{
+  "algorithmId": "binary-search",
+  "version": "1.0.0",
+  "scenarios": [
+    { "id": "empty", "description": { "es": "Arreglo vacío", "en": "Empty array" }, "values": [], "target": 7, "expected": { "status": "not-found", "index": -1 } },
+    { "id": "single-found", "description": { "es": "Único elemento presente", "en": "Single value found" }, "values": [5], "target": 5, "expected": { "status": "found", "index": 0 } },
+    { "id": "single-missing", "description": { "es": "Único elemento ausente", "en": "Single value missing" }, "values": [5], "target": 2, "expected": { "status": "not-found", "index": -1 } },
+    { "id": "first", "description": { "es": "Objetivo al inicio", "en": "Target at start" }, "values": [2, 4, 6, 8, 10], "target": 2, "expected": { "status": "found", "index": 0 } },
+    { "id": "middle", "description": { "es": "Objetivo en el centro", "en": "Target in middle" }, "values": [2, 4, 6, 8, 10], "target": 6, "expected": { "status": "found", "index": 2 } },
+    { "id": "last", "description": { "es": "Objetivo al final", "en": "Target at end" }, "values": [2, 4, 6, 8, 10], "target": 10, "expected": { "status": "found", "index": 4 } },
+    { "id": "missing-between", "description": { "es": "Ausente entre valores", "en": "Missing between values" }, "values": [2, 4, 6, 8, 10], "target": 7, "expected": { "status": "not-found", "index": -1 } },
+    { "id": "missing-outside", "description": { "es": "Ausente fuera del rango", "en": "Missing outside range" }, "values": [-5, -1, 0, 3, 9], "target": 10, "expected": { "status": "not-found", "index": -1 } },
+    { "id": "duplicates", "description": { "es": "Valores duplicados", "en": "Duplicate values" }, "values": [1, 2, 2, 2, 3], "target": 2, "expected": { "status": "found", "index": 2 } },
+    { "id": "negatives", "description": { "es": "Valores negativos", "en": "Negative values" }, "values": [-10, -4, -1, 0, 7], "target": -4, "expected": { "status": "found", "index": 1 } },
+    { "id": "two-values", "description": { "es": "Intervalo de dos elementos", "en": "Two-value interval" }, "values": [4, 9], "target": 9, "expected": { "status": "found", "index": 1 } }
+  ]
+}

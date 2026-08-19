@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Sentry.AspNetCore" Version="6.9.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AlgorithmAnalysis.Contracts\AlgorithmAnalysis.Contracts.csproj" />
+    <ProjectReference Include="..\AlgorithmCatalog.Application\AlgorithmCatalog.Application.csproj" />
+    <ProjectReference Include="..\AlgorithmCatalog.Infrastructure.FileSystem\AlgorithmCatalog.Infrastructure.FileSystem.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\..\catalog\**\*"
+             Link="catalog\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\..\frontend\**\*"
+             Link="web\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- RepositoryLayout resuelve rutas de contenido y es interno a propósito:
+         no forma parte de la superficie pública, pero necesita pruebas propias. -->
+    <InternalsVisibleTo Include="AlgoInspect.Api.Tests" />
+  </ItemGroup>
+
+</Project>

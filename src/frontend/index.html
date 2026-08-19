@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Laboratorio visual del algoritmo de Kahn con implementaciones canónicas, escenarios comparables y reproducción paso a paso.">
+  <title>AlgoInspect — Laboratorio visual de algoritmos</title>
+  <link rel="icon" href="./public/assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="./public/assets/icons/icon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="./public/assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="./public/site.webmanifest">
+  <script>
+    (() => {
+      try {
+        const theme = localStorage.getItem("algoinspect-theme") || "dark";
+        document.documentElement.dataset.theme = theme === "light" ? "light" : "dark";
+      } catch {
+        document.documentElement.dataset.theme = "dark";
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="./public/generated/tailwind.css?v=20260811-theme-system-5">
+  <link rel="stylesheet" href="./styles/visualizer.css?v=20260811-theme-system-5">
+  <link rel="stylesheet" href="./styles/workspace.css?v=20260811-theme-system-5">
+</head>
+<body>
+  <div id="catalogBootstrapStatus" class="catalog-bootstrap-status" role="status" aria-live="polite">
+    <span class="spinner" aria-hidden="true"></span>
+    Cargando Kahn desde el catálogo canónico…
+  </div>
+  <section id="catalogBootstrapError" class="catalog-bootstrap-error" role="alert" tabindex="-1" hidden>
+    <h1 id="catalogBootstrapErrorTitle">No se pudo cargar el catálogo</h1>
+    <p id="catalogBootstrapErrorDetail">Comprueba la conexión con la API.</p>
+    <button id="catalogBootstrapRetry" type="button">Reintentar</button>
+  </section>
+  <!--
+  THESIS: Catálogo y código explican el procedimiento; el estado vivo lo demuestra.
+  OWN-WORLD: Hereda el instrumento técnico oscuro aprobado: carbón, pizarra mate, divisores finos y color semántico contenido.
+  STORY: Selecciona un algoritmo, cambia su lenguaje, recorre una traza finita y relaciona cada operación con el código y las métricas.
+  FIRST VIEWPORT: Catálogo y fuente a la izquierda; escenario gráfico, reproducción y estado a la derecha; ambos paneles son redimensionables.
+  FORM: Superficie canónica de la fase web; integra código, README, pruebas y visualización paso a paso.
+  -->
+  <div class="lab-shell">
+    <header class="lab-topbar">
+      <a class="lab-brand" href="#labWorkspace" aria-label="AlgoInspect, Laboratorio paso a paso; ir al laboratorio">
+        <span class="brand-identity">
+          <img class="brand-lockup brand-lockup-dark" src="./public/assets/brand/algo-inspect-logo.svg" alt="">
+          <img class="brand-lockup brand-lockup-light" src="./public/assets/brand/algo-inspect-logo-light.svg" alt="">
+          <small>Laboratorio paso a paso</small>
+        </span>
+      </a>
+
+      <nav class="lab-nav" aria-label="Navegación principal">
+        <a class="is-active" href="./index.html" aria-current="page">Laboratorio</a>
+      </nav>
+
+      <div class="lab-top-actions">
+        <span class="local-status"><i aria-hidden="true"></i>Catálogo v1.0.0</span>
+        <button id="themeToggle" class="icon-button theme-toggle" type="button" aria-pressed="false" aria-label="Activar modo claro" title="Activar modo claro">
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M12 2.5v2M12 19.5v2M21.5 12h-2M4.5 12h-2M18.72 5.28l-1.42 1.42M6.7 17.3l-1.42 1.42M18.72 18.72l-1.42-1.42M6.7 6.7 5.28 5.28" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 15.2A8.5 8.5 0 0 1 8.8 4 8.5 8.5 0 1 0 20 15.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        </button>
+        <button id="technologyInfoButton" class="icon-button" type="button" aria-expanded="false" aria-controls="technologyPopover" aria-label="Alcance tecnológico de esta fase">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 11v5M12 8h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+
+      <div id="technologyPopover" class="technology-popover" hidden>
+        <strong>Vertical canónica de Kahn</strong>
+        <p>ASP.NET Core publica contrato, documentación, escenarios, fuentes y pruebas. El navegador deriva la traza del escenario versionado recibido.</p>
+      </div>
+    </header>
+
+    <main id="labWorkspace" class="lab-workspace" aria-busy="true">
+      <section id="sourcePanel" class="source-panel" aria-labelledby="sourceTitle">
+        <div class="algorithm-picker-toolbar">
+          <div class="algorithm-picker">
+            <label class="algorithm-combobox" for="algorithmSearch">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="m13 13 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span class="sr-only">Buscar o seleccionar algoritmo</span>
+              <input id="algorithmSearch" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="algorithmMenu" placeholder="Buscar algoritmo publicado" autocomplete="off">
+              <kbd>Ctrl K</kbd>
+            </label>
+
+                    <div id="algorithmMenu" class="algorithm-menu" role="listbox" aria-label="Algoritmos publicados" hidden>
+              <header class="algorithm-menu-header">
+                <div><strong>Catálogo publicado</strong><small>1 algoritmo · escribe para filtrar</small></div>
+                <span>Esc para cerrar</span>
+              </header>
+                        <div id="algorithmCatalog" class="algorithm-catalog" role="presentation"></div>
+              <div id="catalogEmpty" class="catalog-empty" hidden><strong>Sin coincidencias</strong><span>Modifica o limpia el criterio de búsqueda.</span></div>
+              <button id="freeCodeOption" class="free-code-option" type="button" role="option" aria-selected="false" hidden>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 7-5 5 5 5M15 7l5 5-5 5M14 4l-4 16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span><strong>Analizar código libre</strong><small>Sin animación paso a paso · muestra tiempo y espacio</small></span>
+                <kbd>Enter</kbd>
+              </button>
+            </div>
+          </div>
+          <div class="picker-context"><strong id="sourceTitle">Código y teoría</strong><span id="pickerModeLabel">Reconocido</span></div>
+        </div>
+
+        <div class="source-toolbar">
+          <div class="selected-source">
+            <span id="selectedCategory" class="category-dot" aria-hidden="true"></span>
+            <div><strong id="selectedAlgorithmName">Algoritmo de Kahn</strong><small id="selectedAlgorithmSummary">Cargando contenido canónico…</small></div>
+          </div>
+          <label class="language-field" for="languageSelect">
+            <span>Convención</span>
+            <select id="languageSelect" aria-label="Convención de sintaxis del pseudocódigo"></select>
+          </label>
+        </div>
+
+        <div id="editorTabList" class="editor-tab-list" role="toolbar" aria-label="Documentos del algoritmo">
+          <div class="editor-tab-shell" data-tab-shell="code">
+            <button id="codeTab" class="editor-tab is-active" type="button" data-document-tab="code" draggable="true" aria-grabbed="false" aria-pressed="true" aria-controls="codeTabPanel" tabindex="0" title="Arrastra al área superior, inferior, izquierda o derecha">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m5.5 4-3 4 3 4M10.5 4l3 4-3 4M9.5 2 6.6 14" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span id="codeTabFileName">Kahn.cs</span>
+            </button>
+            <button class="tab-actions-toggle" type="button" data-tab-actions="code" aria-label="Opciones de la pestaña de código" aria-haspopup="menu" aria-expanded="false" aria-controls="tabActionsMenu" title="Opciones de la pestaña">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4.5 6 3.5 3.5L11.5 6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="editor-tab-shell" data-tab-shell="readme">
+            <button id="readmeTab" class="editor-tab" type="button" data-document-tab="readme" draggable="true" aria-grabbed="false" aria-pressed="false" aria-controls="readmeTabPanel" tabindex="-1" title="Arrastra al área superior, inferior, izquierda o derecha">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 2.5h7l3 3V13.5H3v-11Z" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round"/><path d="M10 2.5v3h3M5.2 8h5.6M5.2 10.3h4.1" stroke="currentColor" stroke-width="1.05" stroke-linecap="round"/></svg>
+              <span>README.md</span>
+            </button>
+            <button class="tab-actions-toggle" type="button" data-tab-actions="readme" aria-label="Opciones de la pestaña README" aria-haspopup="menu" aria-expanded="false" aria-controls="tabActionsMenu" title="Opciones de la pestaña">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4.5 6 3.5 3.5L11.5 6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+          <div class="editor-tab-shell" data-tab-shell="tests">
+            <button id="testsTab" class="editor-tab" type="button" data-document-tab="tests" draggable="true" aria-grabbed="false" aria-pressed="false" aria-controls="testsTabPanel" tabindex="-1" title="Arrastra al área superior, inferior, izquierda o derecha">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3.5h10v9H3zM5.3 6.2h5.4M5.3 8h5.4M5.3 9.8h3.1" stroke="currentColor" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Pruebas</span>
+            </button>
+            <button class="tab-actions-toggle" type="button" data-tab-actions="tests" aria-label="Opciones de la pestaña de pruebas" aria-haspopup="menu" aria-expanded="false" aria-controls="tabActionsMenu" title="Opciones de la pestaña">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4.5 6 3.5 3.5L11.5 6" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="tabActionsMenu" class="tab-actions-menu" role="menu" aria-label="Acciones de pestaña" hidden>
+          <button type="button" role="menuitem" data-tab-command="restore">
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5 5H2v-3M2.5 5A6 6 0 1 1 2 10" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span><strong>Volver a su posición</strong><small>Recupera el orden original</small></span>
+          </button>
+          <button type="button" role="menuitem" data-tab-command="move-upper-left">
+            <span><strong>Mover arriba a la izquierda</strong><small>Alternativa accesible al arrastre</small></span>
+          </button>
+          <button type="button" role="menuitem" data-tab-command="move-upper-right">
+            <span><strong>Mover arriba a la derecha</strong><small>Alternativa accesible al arrastre</small></span>
+          </button>
+          <button type="button" role="menuitem" data-tab-command="move-lower">
+            <span><strong>Mover abajo</strong><small>Alternativa accesible al arrastre</small></span>
+          </button>
+          <button type="button" role="menuitem" data-tab-command="reset">
+            <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3h10v10H3zM8 3v10M3 8h10" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round"/></svg>
+            <span><strong>Restablecer diseño</strong><small>Abre y reúne todas las pestañas</small></span>
+          </button>
+        </div>
+
+        <div id="documentSplit" class="document-split" aria-label="Área de documentos">
+          <div id="codeTabPanel" class="code-tab-panel" role="region" aria-labelledby="codeTab">
+            <div class="source-meta">
+              <span id="sourceFileName">Kahn.cs</span>
+              <span><i class="status-dot" aria-hidden="true"></i><span id="sourceModeLabel">Implementación canónica validada</span></span>
+            </div>
+
+            <div class="editor-frame">
+              <div id="monacoEditor" aria-label="Código de referencia del algoritmo seleccionado"></div>
+              <textarea id="fallbackEditor" class="fallback-editor" readonly spellcheck="false" aria-label="Código de referencia alternativo"></textarea>
+              <div id="editorLoading" class="editor-loading" role="status"><span class="spinner" aria-hidden="true"></span>Preparando resaltado de sintaxis…</div>
+            </div>
+
+            <footer class="source-statusbar">
+              <span id="codeLineStatus">Línea 1</span>
+              <span id="codeStats">0 líneas</span>
+              <span id="languageCoverage">4 implementaciones canónicas</span>
+            </footer>
+          </div>
+
+          <div id="documentSplitResizer" class="document-split-resizer" role="separator" tabindex="0" aria-label="Redimensionar documentos superior e inferior" aria-orientation="horizontal" aria-controls="codeTabPanel readmeTabPanel testsTabPanel" aria-valuemin="20" aria-valuemax="80" aria-valuenow="50" aria-valuetext="Cada documento ocupa 50 por ciento" title="Arrastra para redimensionar los documentos · doble clic para restablecer">
+            <span aria-hidden="true"><svg viewBox="0 0 30 12" fill="none"><path d="M7 4h16M7 8h16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+            <button id="mergeDocumentsButton" type="button" aria-label="Volver a una sola pestaña" title="Volver a una sola pestaña">
+              <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m5 4-3 4 3 4M11 4l3 4-3 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+
+          <div id="documentSplitResizerVertical" class="document-split-resizer document-split-resizer-vertical" role="separator" tabindex="0" aria-label="Redimensionar las dos columnas" aria-orientation="vertical" aria-controls="codeTabPanel readmeTabPanel testsTabPanel" aria-valuemin="20" aria-valuemax="80" aria-valuenow="50" aria-valuetext="Columna izquierda 50 por ciento; columna derecha 50 por ciento" title="Arrastra para redimensionar las columnas · doble clic para restablecer">
+            <span aria-hidden="true"><svg viewBox="0 0 12 30" fill="none"><path d="M4 7v16M8 7v16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+          </div>
+
+          <div id="documentSplitResizerBottom" class="document-split-resizer document-split-resizer-bottom" role="separator" tabindex="0" aria-label="Redimensionar documentos central e inferior" aria-orientation="horizontal" aria-controls="codeTabPanel readmeTabPanel testsTabPanel" aria-valuemin="20" aria-valuemax="80" aria-valuenow="50" aria-valuetext="Cada documento ocupa 50 por ciento" title="Arrastra para redimensionar los documentos · doble clic para restablecer">
+            <span aria-hidden="true"><svg viewBox="0 0 30 12" fill="none"><path d="M7 4h16M7 8h16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+          </div>
+
+          <article id="readmeTabPanel" class="readme-tab-panel" role="region" aria-labelledby="readmeTab" tabindex="0" hidden>
+            <div id="algorithmReadme" class="algorithm-readme"></div>
+          </article>
+
+          <article id="testsTabPanel" class="tests-tab-panel" role="region" aria-labelledby="testsTab" tabindex="0" hidden>
+            <div id="algorithmTests" class="algorithm-tests"></div>
+          </article>
+        </div>
+      </section>
+
+      <div id="labPanelResizer" class="lab-panel-resizer" role="separator" tabindex="0" aria-label="Redimensionar editor y visualización" aria-orientation="vertical" aria-controls="sourcePanel visualizationPanel" aria-valuemin="35" aria-valuemax="62" aria-valuenow="43" aria-valuetext="43% editor, 57% visualización" title="Arrastra para redimensionar · doble clic para restablecer">
+        <span aria-hidden="true"><svg viewBox="0 0 12 30" fill="none"><path d="M4 7v16M8 7v16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+      </div>
+
+      <section id="visualizationPanel" class="visualization-panel" aria-labelledby="visualTitle">
+        <div id="knownVisualization" class="known-visualization">
+        <header class="visual-header">
+          <div class="visual-heading">
+            <span id="visualCategoryIcon" class="visual-icon" aria-hidden="true"></span>
+            <div class="visual-heading-copy">
+              <div class="visual-title-row"><h2 id="visualTitle">Algoritmo de Kahn</h2><span id="difficultyBadge" class="difficulty-badge">Intermedio</span></div>
+              <p id="visualDescription">Emite vértices sin dependencias pendientes y detecta ciclos.</p>
+              <aside class="invariant-callout" aria-labelledby="invariantTitle">
+                <div class="invariant-label"><h3 id="invariantTitle">Idea que se conserva</h3><span id="familyLabel">Búsqueda</span></div>
+                <p id="invariantText">Si el objetivo existe, permanece dentro del intervalo marcado.</p>
+              </aside>
+            </div>
+          </div>
+          <div class="complexity-badges" aria-label="Complejidad de referencia">
+            <button id="timeComplexityCell" class="complexity-cell" type="button" data-complexity-kind="time" aria-haspopup="dialog" aria-expanded="false" aria-controls="complexityPopover">
+              <small>Tiempo</small><strong id="timeComplexity">O(V + E)</strong><span aria-hidden="true">Ver gráfica</span>
+            </button>
+            <button id="spaceComplexityCell" class="complexity-cell" type="button" data-complexity-kind="space" aria-haspopup="dialog" aria-expanded="false" aria-controls="complexityPopover">
+              <small>Espacio</small><strong id="spaceComplexity">O(V + E)</strong><span aria-hidden="true">Ver gráfica</span>
+            </button>
+            <div id="complexityPopover" class="complexity-popover" role="dialog" aria-label="Escenarios y gráfica de complejidad" hidden>
+              <div class="complexity-popover-heading">
+                <div><small id="complexityPopoverKind">Tiempo</small><strong id="complexityPopoverNotation">O(log n)</strong></div>
+                <span id="complexityPopoverZone">Logarítmica</span>
+              </div>
+              <div id="complexityCases" class="complexity-cases" role="group" aria-label="Escenarios de complejidad"></div>
+              <p id="complexityPopoverDetail">La entrada se reduce en cada paso.</p>
+              <svg id="complexityMiniChart" viewBox="0 0 420 225" role="img" aria-label="Mapa comparativo de notaciones Big O"></svg>
+              <div id="complexityLegend" class="complexity-legend" aria-label="Notaciones incluidas en la gráfica"></div>
+              <div class="complexity-scale" aria-hidden="true"><span>Más eficiente</span><span>Mayor crecimiento</span></div>
+              <p class="complexity-popover-note">Escenarios del catálogo y mapa relativo · no representan mediciones de ejecución.</p>
+            </div>
+          </div>
+        </header>
+
+        <div class="visual-options">
+          <label for="presetSelect"><span>Escenario</span><select id="presetSelect" aria-label="Escenario de entrada"></select></label>
+          <div class="trace-truth"><span aria-hidden="true"></span>Traza canónica v1.0.0</div>
+          <button id="restartButtonTop" class="compact-button" type="button">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 8a6 6 0 1 1 .8 6.9M4 8V3m0 5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Reiniciar
+          </button>
+        </div>
+
+        <div id="visualStage" class="visual-stage" tabindex="0" aria-label="Estado gráfico del algoritmo. Usa más y menos para cambiar el zoom; arrastra o usa Shift y las flechas para mover el diagrama">
+          <div id="stageCanvas" class="stage-canvas"></div>
+          <div class="diagram-pan-hint" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none"><path d="M10 3v14M3 10h14m-7-7L8 5m2-2 2 2m5 5-2-2m2 2-2 2M10 17l-2-2m2 2 2-2M3 10l2-2m-2 2 2 2" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Arrastra para mover
+          </div>
+          <div id="diagramZoomControls" class="diagram-zoom-controls" role="group" aria-label="Controles de zoom del diagrama">
+            <button id="diagramZoomOut" type="button" aria-label="Alejar diagrama" title="Alejar · tecla −">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 10h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            </button>
+            <output id="diagramZoomValue" aria-label="Zoom actual">100%</output>
+            <button id="diagramZoomIn" type="button" aria-label="Acercar diagrama" title="Acercar · tecla +">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 10h10M10 5v10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            </button>
+            <button id="diagramZoomFit" class="diagram-zoom-fit" type="button" aria-label="Ajustar y centrar diagrama" title="Ajustar y centrar · tecla 0">
+              <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M7 4H4v3M13 4h3v3M16 13v3h-3M7 16H4v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span>Ajustar</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="visualStageResizer" class="visual-stage-resizer" role="separator" tabindex="0" aria-label="Redimensionar diagrama y panel de ejecución" aria-orientation="horizontal" aria-controls="visualStage executionDock" aria-valuemin="200" aria-valuemax="420" aria-valuenow="288" aria-valuetext="Diagrama de 288 píxeles" title="Arrastra para cambiar la altura del diagrama · doble clic para restablecer">
+          <span aria-hidden="true"><svg viewBox="0 0 30 12" fill="none"><path d="M7 4h16M7 8h16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+        </div>
+
+        <div class="player-panel">
+          <div class="player-main">
+            <button id="restartButton" class="player-icon-button" type="button" aria-label="Volver al inicio">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 8a8 8 0 1 1 .9 9.2M5 8V3m0 5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button id="previousButton" class="player-icon-button" type="button" aria-label="Paso anterior">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 5v14M18 6l-8 6 8 6V6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            </button>
+            <button id="playButton" class="play-button" type="button" aria-label="Reproducir traza" aria-pressed="false">
+              <svg class="play-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              <svg class="pause-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <span>Reproducir</span>
+            </button>
+            <button id="nextButton" class="player-icon-button" type="button" aria-label="Siguiente paso">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M17 5v14M6 6l8 6-8 6V6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+
+          <div class="timeline-control">
+            <div class="timeline-labels"><span id="stepCounter">Paso 1 de 1</span><span id="operationLabel">Preparación</span></div>
+            <input id="timelineRange" type="range" min="0" max="0" value="0" aria-label="Recorrer los pasos de la traza">
+          </div>
+
+          <label class="speed-control" for="speedSelect"><span>Velocidad</span><select id="speedSelect"><option value="1400">0.5×</option><option value="850" selected>1×</option><option value="480">1.5×</option><option value="250">2×</option></select></label>
+        </div>
+
+        <div id="executionDock" class="execution-dock">
+          <section id="executionHistory" class="execution-section execution-history" aria-labelledby="executionHistoryTitle">
+            <div class="state-heading execution-heading">
+              <div><h3 id="executionHistoryTitle">Ejecución paso a paso</h3><span>Selecciona: código + diagrama</span></div>
+              <strong id="executionProgress">1 / 1</strong>
+            </div>
+            <ol id="executionStepList" class="execution-step-list" aria-label="Pasos de la ejecución"></ol>
+          </section>
+
+          <section id="executionSummary" class="execution-section execution-summary" aria-labelledby="executionSummaryTitle">
+            <div class="state-heading execution-summary-heading">
+              <h3 id="executionSummaryTitle">Estado y resultado</h3>
+              <span id="phaseBadge" class="phase-badge">Preparación</span>
+            </div>
+            <div class="execution-summary-scroll">
+              <div class="current-step-result">
+                <strong id="stepTitle">Arreglo ordenado</strong>
+                <p id="stepExplanation">El algoritmo buscará el valor objetivo dentro de este intervalo.</p>
+              </div>
+              <div class="execution-result-row">
+                <div class="final-result" aria-live="polite">
+                  <span id="finalResultStatus">En ejecución</span>
+                  <strong id="finalResultText">El resultado final se mostrará al completar la traza.</strong>
+                </div>
+              </div>
+              <div class="execution-state-group" aria-labelledby="variablesTitle">
+                <div class="compact-state-heading"><h4 id="variablesTitle">Estado actual</h4><span id="stateStepBadge">Paso 1</span></div>
+                <div id="variableGrid" class="variable-grid"></div>
+              </div>
+              <div class="execution-operations" aria-labelledby="operationsTitle">
+                <div class="compact-state-heading"><h4 id="operationsTitle">Operaciones</h4><span>Acumuladas</span></div>
+                <div id="counterGrid" class="counter-grid"></div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+        </div>
+
+        <div id="freeAnalysisView" class="free-analysis-view" hidden>
+          <header class="free-analysis-header">
+            <div>
+              <h2 id="freeAnalysisTitle">Análisis de código libre</h2>
+              <p>No se asocia a un algoritmo conocido; se omite la animación paso a paso.</p>
+            </div>
+            <div class="free-analysis-actions">
+              <span id="freeAnalysisStatus" class="demo-badge">Simulado</span>
+              <button id="analyzeFreeButton" class="play-button" type="button" aria-label="Analizar simulación de código libre">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+                <span>Analizar simulación</span>
+              </button>
+            </div>
+          </header>
+
+          <div class="free-analysis-scope">
+            <div><span>Alcance</span><strong id="freeScopeName">Contenido completo del editor</strong></div>
+            <p>Las clasificaciones y curvas siguientes son ilustrativas; todavía no se infieren del código.</p>
+          </div>
+
+          <div class="free-scenario-controls" role="group" aria-label="Destacar escenario en ambas gráficas">
+            <button type="button" data-free-scenario="all" class="is-active" aria-pressed="true">Todas</button>
+            <button type="button" data-free-scenario="best" aria-pressed="false"><i aria-hidden="true"></i>Mejor</button>
+            <button type="button" data-free-scenario="average" aria-pressed="false"><i aria-hidden="true"></i>Promedio</button>
+            <button type="button" data-free-scenario="worst" aria-pressed="false"><i aria-hidden="true"></i>Peor</button>
+          </div>
+
+          <div class="free-chart-grid">
+            <article class="free-chart" aria-labelledby="freeTimeTitle">
+              <header><div><h3 id="freeTimeTitle">Complejidad temporal</h3><p>Crecimiento del número de operaciones.</p></div><div class="free-values"><span class="is-best">O(n)</span><span class="is-average">O(n log n)</span><span class="is-worst">O(n²)</span></div></header>
+              <div class="free-chart-canvas"><svg id="freeTimeChart" viewBox="0 0 620 250" role="img" aria-label="Gráfica temporal ilustrativa con mejor, promedio y peor caso"></svg></div>
+            </article>
+            <article class="free-chart" aria-labelledby="freeSpaceTitle">
+              <header><div><h3 id="freeSpaceTitle">Complejidad espacial</h3><p>Crecimiento de la memoria auxiliar.</p></div><div class="free-values"><span class="is-best">O(1)</span><span class="is-average">O(log n)</span><span class="is-worst">O(n)</span></div></header>
+              <div class="free-chart-canvas"><svg id="freeSpaceChart" viewBox="0 0 620 250" role="img" aria-label="Gráfica espacial ilustrativa con mejor, promedio y peor caso"></svg></div>
+            </article>
+          </div>
+
+          <div class="free-chart-probe">
+            <label for="freeInputSize"><span>Tamaño ilustrativo de entrada</span><input id="freeInputSize" type="range" min="1" max="10" value="6"></label>
+            <div><span>n normalizado</span><strong id="freeInputValue">6.0</strong></div>
+            <p id="freeProbeSummary">Mueve el control para comparar el crecimiento relativo en ambas gráficas.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="lab-footer">
+      <p><strong>Fase visual:</strong> no ejecuta el código mostrado ni infiere Big O desde texto libre.</p>
+      <p><strong>Alcance publicado:</strong> primera vertical canónica de Kahn; el análisis libre y los algoritmos adicionales permanecen fuera de esta versión.</p>
+    </footer>
+  </div>
+
+  <div id="liveRegion" class="sr-only" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="./public/vendor/d3/d3.min.js"></script>
+  <script src="./public/vendor/cytoscape/cytoscape.min.js"></script>
+  <script src="./public/vendor/mermaid/mermaid.min.js"></script>
+  <script src="./public/vendor/monaco/vs/loader.js"></script>
+  <script src="./scripts/catalog-client.js?v=20260811-light-mode"></script>
+  <script src="./scripts/canonical-bootstrap.js?v=20260811-light-mode-2"></script>
+</body>
+</html>

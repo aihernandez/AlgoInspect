@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "1.0",
+  "contentVersion": "1.0.0",
+  "id": "bubble-sort",
+  "name": "Ordenamiento burbuja",
+  "englishName": "Bubble Sort",
+  "category": "sorting",
+  "paradigm": "Intercambio adyacente con terminación anticipada",
+  "difficulty": "Básico",
+  "summary": "Ordena in-place comparando vecinos, intercambiando inversiones y deteniéndose cuando una pasada no realiza cambios.",
+  "invariant": "Después de cada pasada completa, el sufijo que comienza después del límite activo está ordenado y en su posición final.",
+  "inputs": [
+    "Una lista finita y mutable de enteros."
+  ],
+  "outputs": [
+    "La misma lista ordenada de forma ascendente.",
+    "Métricas deterministas de comparaciones, intercambios, pasadas y terminación anticipada."
+  ],
+  "preconditions": [
+    "Los elementos admiten una comparación de orden total.",
+    "La colección es mutable para conservar la semántica in-place."
+  ],
+  "assumptions": [
+    "La variante publicada reduce el límite superior después de cada pasada.",
+    "Solo se intercambia cuando el elemento izquierdo es estrictamente mayor, por lo que el algoritmo es estable.",
+    "Una pasada sin intercambios activa la terminación anticipada."
+  ],
+  "complexity": {
+    "best": "O(n)",
+    "average": "O(n²)",
+    "worst": "O(n²)",
+    "space": "O(1)"
+  },
+  "readme": "README.md",
+  "scenarios": "scenarios.json",
+  "implementations": [
+    {
+      "language": "csharp",
+      "minimumVersion": ".NET 10 / C# 14",
+      "entryPoint": "AlgorithmAnalysis.BubbleSort.BubbleSortAlgorithm.Execute",
+      "source": "implementations/csharp/BubbleSort.cs",
+      "tests": "tests/csharp/BubbleSortTests.cs",
+      "validationProfile": "bubble-sort-csharp"
+    },
+    {
+      "language": "javascript",
+      "minimumVersion": "Node.js 24",
+      "entryPoint": "bubbleSort",
+      "source": "implementations/javascript/bubble-sort.js",
+      "tests": "tests/javascript/bubble-sort.test.js",
+      "validationProfile": "bubble-sort-javascript"
+    },
+    {
+      "language": "typescript",
+      "minimumVersion": "TypeScript 5.9 / Node.js 24",
+      "entryPoint": "bubbleSort",
+      "source": "implementations/typescript/bubble-sort.ts",
+      "tests": "tests/typescript/bubble-sort.test.ts",
+      "validationProfile": "bubble-sort-typescript"
+    },
+    {
+      "language": "python",
+      "minimumVersion": "Python 3.13",
+      "entryPoint": "bubble_sort",
+      "source": "implementations/python/bubble_sort.py",
+      "tests": "tests/python/test_bubble_sort.py",
+      "validationProfile": "bubble-sort-python"
+    }
+  ],
+  "references": [
+    {
+      "title": "bubble sort",
+      "author": "Paul E. Black",
+      "organization": "NIST Dictionary of Algorithms and Data Structures",
+      "year": 2023,
+      "url": "https://www.nist.gov/dads/HTML/bubblesort.html"
+    },
+    {
+      "title": "Introduction to Algorithms, 4th edition",
+      "author": "Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein",
+      "organization": "MIT Press",
+      "year": 2022,
+      "url": "https://mitpress.mit.edu/9780262046305/introduction-to-algorithms/"
+    }
+  ]
+}

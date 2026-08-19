@@ -1,0 +1,46 @@
+{
+  "name": "algoinspect-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Herramienta web para explorar algoritmos y analizar visualmente su complejidad.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aihernandez/AlgoInspect.git"
+  },
+  "scripts": {
+    "build": "npm run build:web && npm run build:dotnet",
+    "build:web": "npm run build:css && npm run build:icons && npm run build:vendor",
+    "build:dotnet": "dotnet build AlgorithmCatalog.sln && dotnet build AlgoInspect.Web.sln",
+    "build:css": "tailwindcss -i ./src/frontend/styles/tailwind.css -o ./src/frontend/public/generated/tailwind.css --minify",
+    "build:icons": "node ./scripts/generate-brand-icons.mjs",
+    "build:vendor": "node ./scripts/build-web-vendor.mjs",
+    "clean:publish": "node ./scripts/clean-publish.mjs",
+    "dev": "dotnet run --project ./src/backend/AlgoInspect.Api --urls http://127.0.0.1:4398",
+    "dev:static": "python -m http.server 4398 --bind 127.0.0.1",
+    "watch:css": "tailwindcss -i ./src/frontend/styles/tailwind.css -o ./src/frontend/public/generated/tailwind.css --watch",
+    "validate:catalog": "dotnet run --project ./src/backend/AlgorithmCatalog.Validation -- ./catalog",
+    "validate:kahn": "node ./scripts/validate-algorithms.mjs --algorithm kahn",
+    "validate:kahn:failure": "node ./scripts/validate-algorithms.mjs --demonstrate-failure",
+    "validate:algorithms": "node ./scripts/validate-algorithms.mjs",
+    "publish:app": "npm run clean:publish && npm run build:web && dotnet publish ./src/backend/AlgoInspect.Api/AlgoInspect.Api.csproj --configuration Release --output ./artifacts/publish",
+    "test": "npm run test:dotnet && npm run test:web",
+    "test:dotnet": "dotnet test AlgorithmCatalog.sln && dotnet test AlgoInspect.Web.sln",
+    "test:web": "dotnet build ./src/backend/AlgoInspect.Api/AlgoInspect.Api.csproj && npm run build:web && playwright test tests/e2e/web.spec.js --reporter=line"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/cli": "4.3.3",
+    "tailwindcss": "4.3.3"
+  },
+  "dependencies": {
+    "badge-maker": "^6.0.0",
+    "cytoscape": "3.33.1",
+    "d3": "7.9.0",
+    "mermaid": "11.16.1",
+    "monaco-editor": "0.56.0"
+  },
+  "overrides": {
+    "dompurify": "3.4.13"
+  }
+}

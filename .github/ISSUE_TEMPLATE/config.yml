@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/aihernandez/AlgoInspect/discussions
+    about: Ask how something works, or float an idea before it becomes a proposal.
+  - name: Report a security vulnerability
+    url: https://github.com/aihernandez/AlgoInspect/security/policy
+    about: Do not open a public issue. Report privately instead.
+  - name: Documentation
+    url: https://github.com/aihernandez/AlgoInspect/tree/main/docs
+    about: Architecture, product vision, contracts and user stories.

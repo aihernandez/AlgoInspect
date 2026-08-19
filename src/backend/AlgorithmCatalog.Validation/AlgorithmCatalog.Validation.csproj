@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\AlgorithmCatalog.Application\AlgorithmCatalog.Application.csproj" />
+    <ProjectReference Include="..\AlgorithmCatalog.Infrastructure.FileSystem\AlgorithmCatalog.Infrastructure.FileSystem.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

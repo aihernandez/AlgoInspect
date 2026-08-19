@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0",
+  "contentVersion": "1.0.0",
+  "languages": [
+    { "id": "csharp", "displayName": "C#", "fileExtension": "cs", "isInitialLanguage": true },
+    { "id": "java", "displayName": "Java", "fileExtension": "java", "isInitialLanguage": false },
+    { "id": "javascript", "displayName": "JavaScript", "fileExtension": "js", "isInitialLanguage": true },
+    { "id": "node", "displayName": "Node.js", "fileExtension": "js", "isInitialLanguage": false },
+    { "id": "typescript", "displayName": "TypeScript", "fileExtension": "ts", "isInitialLanguage": true },
+    { "id": "python", "displayName": "Python", "fileExtension": "py", "isInitialLanguage": true },
+    { "id": "rust", "displayName": "Rust", "fileExtension": "rs", "isInitialLanguage": false },
+    { "id": "ruby", "displayName": "Ruby", "fileExtension": "rb", "isInitialLanguage": false },
+    { "id": "c", "displayName": "C", "fileExtension": "c", "isInitialLanguage": false },
+    { "id": "cpp", "displayName": "C++", "fileExtension": "cpp", "isInitialLanguage": false }
+  ],
+  "algorithms": ["kahn", "binary-search", "bubble-sort"]
+}

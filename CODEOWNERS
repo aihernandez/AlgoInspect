@@ -1,0 +1,16 @@
+# Revisión por defecto de todo el repositorio.
+*                       @aihernandez
+
+# El catálogo es la fuente canónica: un cambio aquí altera lo que la aplicación
+# afirma como verdad verificada.
+/catalog/               @aihernandez
+
+# Contratos y decisiones de arquitectura: cambiarlos rompe consumidores.
+/contracts/             @aihernandez
+/docs/decisions/        @aihernandez
+
+# Superficie de seguridad y despliegue.
+/src/backend/           @aihernandez
+/.github/workflows/     @aihernandez
+/Dockerfile             @aihernandez
+/SECURITY.md            @aihernandez

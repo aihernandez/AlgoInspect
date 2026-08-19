@@ -1,0 +1,13 @@
+.git
+.github
+.vs
+.pytest_cache
+.impeccable
+artifacts
+**/bin
+**/obj
+node_modules
+playwright-report
+test-results
+src/frontend/public/generated
+src/frontend/public/vendor

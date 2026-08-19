@@ -72,8 +72,7 @@ The following are **out of scope**:
   running the app;
 - missing hardening on a deployment that this repository does not control. The
   repository ships hardening defaults, but TLS, DNS, proxy and observability are
-  the responsibility of whoever hosts it. See
-  [`docs/operations/INTERNET_DEPLOYMENT.md`](docs/operations/INTERNET_DEPLOYMENT.md).
+  the responsibility of whoever hosts it.
 
 ## Security practices in this repository
 

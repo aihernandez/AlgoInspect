@@ -168,9 +168,8 @@ flowchart LR
 ```
 
 Two .NET solutions build this repository. `AlgorithmCatalog.sln` builds the canonical
-source, and `AlgoInspect.Web.sln` builds the API and the lab. A solution is a build view,
-not a copy of the projects. The reasoning is in
-[ADR-0002](docs/decisions/0002-repository-structure.md).
+source, and `AlgoInspect.Web.sln` builds the API and the lab. A solution is a build view
+rather than a copy of the projects, so a project can belong to both.
 
 ## Anatomy of a catalog entry
 
@@ -261,8 +260,8 @@ language you implement. You don't have to implement all four. See
 
 The catalog and the web application have different responsibilities and different release
 rhythms, but splitting them into separate repositories now would make contract changes
-painful. So: one workspace, two build views. The reasoning is recorded in
-[ADR-0002](docs/decisions/0002-repository-structure.md).
+painful. So: one workspace, two build views. If their release cycles ever diverge for
+real, the split can be revisited.
 
 </details>
 
@@ -284,15 +283,12 @@ content security policy still restricts `connect-src` to the application itself.
 
 | Document | What it covers |
 | --- | --- |
-| [`VISION.md`](docs/product/VISION.md) | Product vision and principles |
-| [`ROADMAP.md`](docs/product/ROADMAP.md) | Phased sequence of work |
 | [`OVERVIEW.md`](docs/architecture/OVERVIEW.md) | Combined architecture and vertical slices |
 | [`CONTENT_MODEL.md`](docs/architecture/CONTENT_MODEL.md) | How catalog content is modelled |
 | [`API_CONTRACT.md`](docs/architecture/API_CONTRACT.md) | Contract between catalog and web |
 | [`ANALYSIS_MODEL.md`](docs/architecture/ANALYSIS_MODEL.md) | Planned analysis results, metrics and evidence |
 | [`TECHNOLOGY_STACK.md`](docs/architecture/TECHNOLOGY_STACK.md) | Build technologies and catalog languages |
-| [`INTERNET_DEPLOYMENT.md`](docs/operations/INTERNET_DEPLOYMENT.md) | Hardening applied and what a host must configure |
-| [`decisions/`](docs/decisions) | Architecture decision records |
+| [`TESTING.md`](docs/architecture/TESTING.md) | How the catalog and the application are verified |
 
 ## Contributing
 

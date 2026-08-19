@@ -19,4 +19,4 @@ algorithms/<id>/
 └── tests/<language>/
 ```
 
-El contrato completo se define en [`../docs/architecture/CONTENT_MODEL.md`](../docs/architecture/CONTENT_MODEL.md). La evidencia reproducible está en [`../docs/user-stories/phase-1/CANONICAL_EXPANSION_EVIDENCE.md`](../docs/user-stories/phase-1/CANONICAL_EXPANSION_EVIDENCE.md).
+El contrato completo se define en [`../docs/architecture/CONTENT_MODEL.md`](../docs/architecture/CONTENT_MODEL.md).

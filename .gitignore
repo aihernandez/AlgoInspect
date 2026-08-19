@@ -28,6 +28,14 @@ msbuild.binlog
 # Carpeta de restauración NuGet clásica.
 packages/
 
+# --- Documentacion interna -------------------------------------------------
+# Alcance de fases, decisiones, vision de producto e historias de usuario. Se
+# conservan en local; la gestion de historias vive en las herramientas de GitHub.
+docs/operations/
+docs/decisions/
+docs/product/
+docs/user-stories/
+
 # --- Node ------------------------------------------------------------------
 node_modules/
 npm-debug.log*

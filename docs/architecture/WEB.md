@@ -29,7 +29,7 @@ Los archivos históricos `prototype-*` se conservan como referencia de diseño, 
 
 La aplicación agrega CSP, cabeceras defensivas, rate limit, compresión, caché de estáticos y logs HTTP sin cuerpos. El procesamiento de forwarded headers permanece deshabilitado hasta recibir IP explícitas de un proxy confiable.
 
-La configuración operativa, las rutas de health check y las responsabilidades de TLS están en `docs/operations/INTERNET_DEPLOYMENT.md`.
+La configuración operativa, las rutas de health check y las responsabilidades de TLS se documentan fuera de este repositorio.
 
 ## Límites actuales
 

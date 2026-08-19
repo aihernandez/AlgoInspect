@@ -6,9 +6,9 @@ body:
   - type: markdown
     attributes:
       value: |
-        Before filing, please check [the roadmap](https://github.com/aihernandez/AlgoInspect/blob/main/docs/product/ROADMAP.md).
-        Some capabilities are already planned for later phases, including a
-        CLI, editor extensions and additional analyzers.
+        Before filing, please check the roadmap in the README. Some capabilities
+        are already planned for later phases, including a CLI, editor extensions
+        and additional analyzers.
 
   - type: textarea
     id: problem

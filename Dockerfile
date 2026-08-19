@@ -3,8 +3,12 @@ WORKDIR /src
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY src/frontend ./src/frontend
-COPY scripts/generate-brand-icons.mjs scripts/build-web-vendor.mjs ./scripts/
-RUN npm run build:web
+COPY scripts/build-web-vendor.mjs ./scripts/
+# Los iconos de marca estan versionados en src/frontend/public/assets/icons y
+# se generan con Playwright, que no tiene navegador en esta etapa. Aqui solo se
+# construye lo que no se versiona: la hoja de estilos y las dependencias del
+# navegador.
+RUN npm run build:css && npm run build:vendor
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dotnet-build
 WORKDIR /src

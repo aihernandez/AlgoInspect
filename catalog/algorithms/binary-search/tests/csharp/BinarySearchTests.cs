@@ -21,7 +21,7 @@ public sealed class BinarySearchTests
     public void Find_returns_expected_index(string caseName, int[] values, int target, int expectedIndex)
     {
         int index = BinarySearchAlgorithm.Find(values, target);
-        Assert.Equal(expectedIndex, index);
-        if (index >= 0) Assert.Equal(target, values[index]);
+        Assert.True(index == expectedIndex, $"{caseName}: se esperaba {expectedIndex} y se obtuvo {index}.");
+        if (index >= 0) Assert.True(values[index] == target, caseName);
     }
 }

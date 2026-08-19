@@ -25,6 +25,8 @@ public sealed class BubbleSortTests
         BubbleSortResult result = BubbleSortAlgorithm.Execute(input);
 
         Assert.Equal(expected, result.Values);
-        Assert.Equal(expected, input);
+
+        // El ordenamiento es in-place: la entrada tambien queda ordenada.
+        Assert.True(expected.SequenceEqual(input), caseName);
     }
 }

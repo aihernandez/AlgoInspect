@@ -103,7 +103,7 @@ jobs:
         run: docker rm --force algoinspect-smoke || true
 
       - name: Escaneo de vulnerabilidades de la imagen
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: algoinspect:${{ github.sha }}
           format: table

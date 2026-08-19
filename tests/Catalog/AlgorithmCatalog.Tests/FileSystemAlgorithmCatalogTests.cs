@@ -51,7 +51,7 @@ public sealed class FileSystemAlgorithmCatalogTests
         Assert.NotNull(result);
         Assert.Equal("kahn.py", result.FileName);
         Assert.Contains("def kahn", result.Source, StringComparison.Ordinal);
-        Assert.Contains("test_canonical_scenario", result.Tests, StringComparison.Ordinal);
+        Assert.Contains("def test_kahn_returns_expected_result", result.Tests, StringComparison.Ordinal);
         Assert.Equal("kahn-python", result.ValidationProfile);
     }
 }

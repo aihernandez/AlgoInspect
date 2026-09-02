@@ -37,7 +37,7 @@
     "badge-maker": "^6.0.0",
     "cytoscape": "3.33.1",
     "d3": "7.9.0",
-    "mermaid": "11.16.1",
+    "mermaid": "11.17.2",
     "monaco-editor": "0.56.0"
   },
   "overrides": {

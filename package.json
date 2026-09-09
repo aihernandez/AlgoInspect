@@ -29,7 +29,7 @@
     "test:web": "dotnet build ./src/backend/AlgoInspect.Api/AlgoInspect.Api.csproj && npm run build:web && playwright test tests/e2e/web.spec.js --reporter=line"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/cli": "4.3.3",
     "tailwindcss": "4.3.3"
   },

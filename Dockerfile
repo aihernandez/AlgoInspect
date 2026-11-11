@@ -21,7 +21,7 @@ RUN dotnet publish ./src/backend/AlgoInspect.Api/AlgoInspect.Api.csproj \
     --no-restore \
     --output /app/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS runtime
 WORKDIR /app
 ENV ASPNETCORE_URLS=http://+:8080 \
     ASPNETCORE_ENVIRONMENT=Production

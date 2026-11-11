@@ -10,7 +10,7 @@ COPY scripts/build-web-vendor.mjs ./scripts/
 # navegador.
 RUN npm run build:css && npm run build:vendor
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dotnet-build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS dotnet-build
 WORKDIR /src
 COPY . .
 COPY --from=web-build /src/src/frontend/public/generated ./src/frontend/public/generated
